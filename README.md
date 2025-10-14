@@ -62,7 +62,9 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/725d5169-c13e-4114-8fdb-fea2289d1414) and click on Share -> Publish.
+This project is deployed on Vercel. Any push to the main branch will trigger an automatic deployment.
+
+You can also deploy manually via [Lovable](https://lovable.dev/projects/725d5169-c13e-4114-8fdb-fea2289d1414) by clicking Share -> Publish.
 
 ## Can I connect a custom domain to my Lovable project?
 
