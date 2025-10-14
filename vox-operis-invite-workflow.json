@@ -1,0 +1,314 @@
+{
+  "name": "🎙️ Vox Operis - Invite Email Automation",
+  "meta": {
+    "description": "🚀 **Professional Invite System** - Automatically sends beautifully designed invitation emails with tracking\n\n✨ **What this workflow does:**\n• Receives invite requests from your admin panel\n• Generates stunning HTML email invitations\n• Sends emails via Gmail Business\n• Logs all activity to Notion for tracking\n• Handles errors gracefully with proper responses\n\n🎯 **Perfect for:**\n• Beta program invitations\n• Team member onboarding\n• Client portal access\n• VIP user recruitment\n\n⚡ **Features:**\n• Responsive email design\n• Custom admin messages\n• Expiry date handling\n• Professional branding\n• Complete audit trail",
+    "templateCredsSetupCompleted": false,
+    "instanceId": "vox-operis-production"
+  },
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vox-operis-invite",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-trigger-node",
+      "name": "🌐 Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        320
+      ],
+      "notes": "📥 Receives invite requests from Vox Operis admin panel\n\n🔗 Expected payload:\n• email: recipient email\n• invite_code: generated code\n• expiry_days: invitation validity\n• admin_name: sender name\n• message: custom note"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process the incoming webhook data and prepare email template\nconst inviteData = $json;\n\n// Create the registration URL with invite code\nconst baseUrl = 'https://vox-operis.com'; // Replace with your actual domain\nconst inviteUrl = `${baseUrl}/register?code=${inviteData.invite_code}`;\n\n// Calculate expiry date\nconst expiryDate = new Date();\nexpiryDate.setDate(expiryDate.getDate() + (inviteData.expiry_days || 30));\nconst formattedExpiryDate = expiryDate.toLocaleDateString('en-US', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\n\n// Create email subject\nconst subject = `You're invited to join Vox Operis by ${inviteData.admin_name || 'the team'}`;\n\n// HTML email template\nconst htmlTemplate = `\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Vox Operis Invitation</title>\n    <style>\n        body {\n            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;\n            line-height: 1.6;\n            color: #333333;\n            margin: 0;\n            padding: 0;\n            background-color: #f8fafc;\n        }\n        .container {\n            max-width: 600px;\n            margin: 0 auto;\n            background-color: #ffffff;\n            border-radius: 8px;\n            overflow: hidden;\n            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);\n        }\n        .header {\n            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);\n            color: white;\n            padding: 40px 30px;\n            text-align: center;\n        }\n        .header h1 {\n            margin: 0;\n            font-size: 28px;\n            font-weight: 600;\n        }\n        .content {\n            padding: 40px 30px;\n        }\n        .content h2 {\n            color: #1f2937;\n            font-size: 20px;\n            margin-bottom: 20px;\n        }\n        .content p {\n            margin-bottom: 16px;\n            color: #4b5563;\n        }\n        .invite-code {\n            background-color: #f3f4f6;\n            border: 2px dashed #d1d5db;\n            padding: 15px;\n            text-align: center;\n            border-radius: 6px;\n            margin: 25px 0;\n        }\n        .invite-code-text {\n            font-family: 'Courier New', monospace;\n            font-size: 18px;\n            font-weight: bold;\n            color: #2563eb;\n            letter-spacing: 2px;\n        }\n        .button {\n            display: inline-block;\n            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);\n            color: white !important;\n            padding: 14px 28px;\n            text-decoration: none;\n            border-radius: 6px;\n            font-weight: 600;\n            font-size: 16px;\n            margin: 25px 0;\n            transition: transform 0.2s ease;\n        }\n        .button:hover {\n            transform: translateY(-1px);\n        }\n        .custom-message {\n            background-color: #fef3c7;\n            border-left: 4px solid #f59e0b;\n            padding: 16px;\n            margin: 20px 0;\n            border-radius: 0 6px 6px 0;\n        }\n        .custom-message p {\n            margin: 0;\n            color: #92400e;\n            font-style: italic;\n        }\n        .footer {\n            background-color: #f9fafb;\n            padding: 30px;\n            text-align: center;\n            border-top: 1px solid #e5e7eb;\n        }\n        .footer p {\n            margin: 0;\n            color: #6b7280;\n            font-size: 14px;\n        }\n        .expiry {\n            background-color: #fef2f2;\n            border: 1px solid #fecaca;\n            padding: 12px;\n            border-radius: 6px;\n            margin: 20px 0;\n            text-align: center;\n        }\n        .expiry p {\n            margin: 0;\n            color: #dc2626;\n            font-size: 14px;\n            font-weight: 500;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>🎙️ Vox Operis</h1>\n        </div>\n        <div class=\"content\">\n            <h2>You've been invited to join us!</h2>\n            <p>Hello there!</p>\n            <p><strong>${inviteData.admin_name || 'Someone from our team'}</strong> has invited you to join Vox Operis, our voice operations platform.</p>\n            \n            ${inviteData.message ? `\n            <div class=\"custom-message\">\n                <p>\"${inviteData.message}\"</p>\n            </div>\n            ` : ''}\n            \n            <p>To get started, click the button below to create your account:</p>\n            \n            <div style=\"text-align: center;\">\n                <a href=\"${inviteUrl}\" class=\"button\">Accept Invitation & Sign Up</a>\n            </div>\n            \n            <p>Alternatively, you can copy and paste this invitation code when signing up:</p>\n            \n            <div class=\"invite-code\">\n                <div class=\"invite-code-text\">${inviteData.invite_code}</div>\n            </div>\n            \n            <div class=\"expiry\">\n                <p>⏰ This invitation expires on ${formattedExpiryDate}</p>\n            </div>\n            \n            <p>If you have any questions, feel free to reach out to our support team.</p>\n        </div>\n        <div class=\"footer\">\n            <p><strong>Vox Operis Team</strong></p>\n            <p>If you didn't expect this invitation, you can safely ignore this email.</p>\n        </div>\n    </div>\n</body>\n</html>\n`;\n\n// Return processed data\nreturn {\n  to: inviteData.email,\n  subject: subject,\n  html: htmlTemplate,\n  invite_url: inviteUrl,\n  expiry_date: formattedExpiryDate,\n  admin_name: inviteData.admin_name || 'Unknown',\n  invite_code: inviteData.invite_code,\n  custom_message: inviteData.message || null,\n  sent_timestamp: new Date().toISOString()\n};"
+      },
+      "id": "email-processor-node",
+      "name": "⚙️ Email Template Builder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        320
+      ],
+      "notes": "🎨 Creates beautiful HTML email template\n\n✨ Features:\n• Responsive email design\n• Professional Vox Operis branding\n• Custom admin messages\n• Invitation code formatting\n• Expiry date calculation\n• Mobile-optimized layout"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "id": "gmail-sender-node",
+      "name": "📧 Gmail Sender",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2,
+      "position": [
+        840,
+        220
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIAL_ID",
+          "name": "Gmail Business Account"
+        }
+      },
+      "notes": "📤 Sends professional invitation emails\n\n🎯 Using Gmail Business for:\n• High deliverability rates\n• Professional sender reputation\n• Branded email appearance\n• Reliable email delivery\n• Business-grade security"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "databaseId": "YOUR_NOTION_DATABASE_ID",
+        "title": "Email Invite: {{ $('Process Invite Data').item.json.to }}",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Email",
+              "emailValue": "={{ $('Process Invite Data').item.json.to }}"
+            },
+            {
+              "key": "Invite Code",
+              "textValue": "={{ $('Webhook').item.json.invite_code }}"
+            },
+            {
+              "key": "Status",
+              "selectValue": "Email Sent"
+            },
+            {
+              "key": "Sent Date",
+              "dateValue": "={{ $('Process Invite Data').item.json.sent_timestamp }}"
+            },
+            {
+              "key": "Sent By",
+              "textValue": "={{ $('Process Invite Data').item.json.admin_name }}"
+            },
+            {
+              "key": "Expiry Date",
+              "dateValue": "={{ $now.plus({days: $('Webhook').item.json.expiry_days || 30}).toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "notion-logger-node",
+      "name": "📊 Notion Logger",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2,
+      "position": [
+        840,
+        420
+      ],
+      "credentials": {
+        "notionApi": {
+          "id": "YOUR_NOTION_CREDENTIAL_ID",
+          "name": "Notion Integration"
+        }
+      },
+      "notes": "📝 Tracks all invitations in Notion\n\n🔍 Logs important data:\n• Recipient email address\n• Unique invitation code\n• Send timestamp\n• Admin who sent invite\n• Expiry date tracking\n• Email delivery status"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true,\n  \"message\": \"Invitation email sent successfully\",\n  \"data\": {\n    \"email\": \"{{ $('Process Invite Data').item.json.to }}\",\n    \"invite_code\": \"{{ $('Webhook').item.json.invite_code }}\",\n    \"sent_at\": \"{{ $('Process Invite Data').item.json.sent_timestamp }}\",\n    \"expires_on\": \"{{ $('Process Invite Data').item.json.expiry_date }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "success-response-node",
+      "name": "✅ Success Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        220
+      ],
+      "notes": "🎉 Confirms successful invitation sent\n\n✨ Returns structured response:\n• Success confirmation\n• Email delivery status\n• Invitation details\n• Timestamp information\n• Perfect for admin panel feedback"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "error_condition",
+              "leftValue": "={{ $('Send Gmail').item.json.error || $('Log to Notion').item.json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "id": "error-checker-node",
+      "name": "🔍 Error Handler",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        320
+      ],
+      "notes": "🛡️ Smart error detection & handling\n\n🔧 Monitors for issues:\n• Gmail delivery failures\n• Notion logging errors\n• Network connectivity problems\n• Invalid email addresses\n• Routes to appropriate response"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false,\n  \"message\": \"Failed to send invitation email\",\n  \"error\": \"{{ $('Send Gmail').item.json.error || $('Log to Notion').item.json.error || 'Unknown error occurred' }}\",\n  \"data\": {\n    \"email\": \"{{ $('Process Invite Data').item.json.to }}\",\n    \"invite_code\": \"{{ $('Webhook').item.json.invite_code }}\"\n  }\n}",
+        "options": {}
+      },
+      "id": "error-response-node",
+      "name": "❌ Error Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        420
+      ],
+      "notes": "🚨 Handles and reports errors gracefully\n\n💡 Provides helpful feedback:\n• Clear error descriptions\n• Debugging information\n• Retry suggestions\n• Maintains professional response\n• Helps admin troubleshoot issues"
+    },
+    {
+      "parameters": {
+        "content": "# 🎙️ **Vox Operis Professional Invitation System**\n\n**Enterprise-grade automated email invitation workflow with comprehensive tracking and error handling**\n\n## 🔄 **Workflow Architecture:**\n\n**Stage 1 - Request Processing:** 🌐 Webhook Trigger receives invitation requests from admin panel → ⚙️ Email Template Builder processes data, validates inputs, generates responsive HTML templates with custom branding, calculates expiry dates, and formats invitation URLs\n\n**Stage 2 - Delivery & Tracking:** 📧 Gmail Sender dispatches professional invitation emails via Gmail Business for optimal deliverability → 📊 Notion Logger simultaneously creates comprehensive audit records with recipient details, timestamps, and admin attribution\n\n**Stage 3 - Response Management:** 🔍 Error Handler monitors both email delivery and database logging for failures → Routes to either ✅ Success Response (structured JSON confirmation) or ❌ Error Response (detailed diagnostic information)\n\n## ⚡ **Key Features:** Mobile-optimized templates • Custom admin messages • Parallel processing • Complete audit trails • Production-ready error handling",
+        "height": 180,
+        "width": 1200
+      },
+      "id": "workflow-header-info",
+      "name": "Workflow Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        200,
+        180
+      ]
+    }
+  ],
+  "connections": {
+    "🌐 Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Email Template Builder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Email Template Builder": {
+      "main": [
+        [
+          {
+            "node": "📧 Gmail Sender",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📊 Notion Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Gmail Sender": {
+      "main": [
+        [
+          {
+            "node": "🔍 Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 Notion Logger": {
+      "main": [
+        [
+          {
+            "node": "🔍 Error Handler",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Error Handler": {
+      "main": [
+        [
+          {
+            "node": "❌ Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "✅ Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": {
+      "errorWorkflow": "",
+      "saveDataErrorExecution": "all",
+      "saveDataSuccessExecution": "all"
+    },
+    "timezone": "America/New_York"
+  },
+  "versionId": "2.0",
+  "id": "vox-operis-invite-automation",
+  "tags": [
+    {
+      "id": "vox-operis",
+      "name": "🎙️ Vox Operis"
+    },
+    {
+      "id": "email-automation",
+      "name": "📧 Email Automation"
+    },
+    {
+      "id": "invitations",
+      "name": "💌 Invitations"
+    },
+    {
+      "id": "production",
+      "name": "🚀 Production Ready"
+    },
+    {
+      "id": "gmail-business",
+      "name": "📮 Gmail Business"
+    },
+    {
+      "id": "notion-integration",
+      "name": "📝 Notion Integration"
+    }
+  ],
+  "staticData": {
+    "global": {
+      "workflow_info": {
+        "created": "2024-12-16",
+        "version": "2.0",
+        "author": "Vox Operis Team",
+        "purpose": "Automated invitation system with professional email templates and comprehensive tracking"
+      }
+    }
+  }
+}

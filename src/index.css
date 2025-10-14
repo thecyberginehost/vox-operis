@@ -1,0 +1,151 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 222 84% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 71% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 71% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 32 98% 60%;
+    --primary-foreground: 222 84% 5%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 40 96% 53%;
+    --accent-foreground: 222 84% 5%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 32 98% 60%;
+
+    --radius: 0.75rem;
+    
+    /* Vox-Operis Custom Tokens */
+    --brand-orange: 32 98% 60%;
+    --brand-yellow: 40 96% 53%;
+    --brand-gradient: linear-gradient(135deg, hsl(32 98% 60%), hsl(40 96% 53%));
+    --surface-elevated: 224 71% 10%;
+    --surface-interactive: 217 33% 20%;
+    --text-primary: 210 40% 98%;
+    --text-secondary: 215 20% 65%;
+    --shadow-glow: 0 0 40px hsl(32 98% 60% / 0.3);
+    --shadow-card: 0 10px 30px -10px hsl(222 84% 5% / 0.8);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222 84% 5%;
+    --foreground: 210 40% 98%;
+
+    --card: 224 71% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 224 71% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 32 98% 60%;
+    --primary-foreground: 222 84% 5%;
+
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 40 96% 53%;
+    --accent-foreground: 222 84% 5%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 32 98% 60%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground dark;
+  }
+}
+
+@layer components {
+  .brand-gradient {
+    background: var(--brand-gradient);
+  }
+  
+  .glass-card {
+    @apply bg-card/90 backdrop-blur-sm border border-border/50;
+  }
+  
+  .glow-effect {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .elevated-card {
+    @apply bg-card border border-border;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .interactive-card {
+    @apply bg-card border border-border transition-all duration-300 hover:border-primary/50 hover:shadow-lg;
+  }
+
+  /* Override animate-pulse to prevent seizure-inducing blinking in recording components */
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  /* Custom recording indicator - static with subtle glow */
+  .recording-indicator {
+    @apply bg-red-500 rounded-full;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+  }
+}

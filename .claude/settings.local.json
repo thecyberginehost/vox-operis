@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:dev:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:*)",
+      "Bash(supabase:*)",
+      "Bash(npx supabase:*)",
+      "Bash(npm run supabase:logs:*)",
+      "Bash(npm run supabase:deploy:*)",
+      "Bash(npm run supabase:status:*)",
+      "Bash(psql:*)",
+      "Bash(netstat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
