@@ -13,7 +13,16 @@
       "Bash(npm run supabase:deploy:*)",
       "Bash(npm run supabase:status:*)",
       "Bash(psql:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(curl:*)",
+      "Bash(cat:*)",
+      "Bash(git rm:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []

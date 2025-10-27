@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,11 +13,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   User, Users, Building2, MapPin, Clock, Briefcase, Target,
   CheckCircle, ArrowRight, ArrowLeft, Video, Mic, FileText,
-  Award, Globe, GraduationCap, Lightbulb, Heart, Zap
+  Award, Globe, GraduationCap, Lightbulb, Heart, Zap, AlertCircle, Save, Camera, Upload
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { supabase } from "@/lib/supabase";
 
 interface NewOnboardingProps {
   onComplete: () => void;
@@ -60,6 +62,8 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const { updateProfile } = useProfile();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [data, setData] = useState<OnboardingData>({
@@ -87,7 +91,38 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
     hiring_volume: ''
   });
 
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
   const totalSteps = data.userType === 'candidate' ? 5 : data.userType === 'recruiter' ? 3 : data.userType === 'both' ? 6 : 2;
+
+  // Auto-save progress to localStorage
+  useEffect(() => {
+    const savedData = localStorage.getItem('onboarding_progress');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        setData(parsed.data);
+        setCurrentStep(parsed.step);
+      } catch (e) {
+        console.error('Failed to load saved progress');
+      }
+    }
+  }, []);
+
+  // Save progress whenever data changes
+  useEffect(() => {
+    if (data.userType) {
+      const progressData = {
+        data,
+        step: currentStep,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('onboarding_progress', JSON.stringify(progressData));
+      setLastSaved(new Date());
+    }
+  }, [data, currentStep]);
 
   // Data arrays
   const industries = [
@@ -172,6 +207,70 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
     }
   };
 
+  const canSkip = () => {
+    // Steps 4 and 5 are optional and can be skipped
+    return currentStep === 4 || currentStep === 5;
+  };
+
+  const handleSkip = () => {
+    if (canSkip() && currentStep < totalSteps) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
+  const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be less than 5MB');
+        return;
+      }
+
+      setAvatarFile(file);
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setError(null);
+    }
+  };
+
+  const uploadAvatar = async (userId: string): Promise<string | null> => {
+    if (!avatarFile) return null;
+
+    try {
+      setUploadingAvatar(true);
+      const fileExt = avatarFile.name.split('.').pop();
+      const fileName = `${userId}-${Date.now()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(filePath, avatarFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (err) {
+      console.error('Error uploading avatar:', err);
+      return null;
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleNext = () => {
     if (canProceed() && currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
@@ -189,6 +288,15 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
       setLoading(true);
       setError(null);
 
+      // Get current user ID for avatar upload
+      const { data: { user } } = await supabase.auth.getUser();
+      let avatarUrl = null;
+
+      // Upload avatar if one was selected
+      if (avatarFile && user) {
+        avatarUrl = await uploadAvatar(user.id);
+      }
+
       const profileUpdates: any = {
         onboarding_completed: true,
         user_type: data.userType,
@@ -196,6 +304,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         "current_role": data.current_role.trim(),
         location: data.location.trim(),
         phone: data.phone || null,
+        avatar_url: avatarUrl,
         "years_of_experience": data.experience_years,
         "professional_summary": data.professional_summary.trim() || null,
         industry: data.industry,
@@ -215,6 +324,10 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
 
       const { error } = await updateProfile(profileUpdates);
       if (error) throw error;
+
+      // Clear saved progress after successful completion
+      localStorage.removeItem('onboarding_progress');
+      localStorage.setItem('show_welcome_modal', 'true');
 
       onComplete();
     } catch (err) {
@@ -256,44 +369,13 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                 </CardContent>
               </Card>
 
-              <Card
-                className={`cursor-pointer transition-all ${data.userType === 'recruiter' ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-lg hover:scale-[1.01]'}`}
-                onClick={() => handleInputChange('userType', 'recruiter')}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-lg bg-green-100 text-green-600">
-                      <Building2 className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">I'm Hiring Talent</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Skip the boring first interviews. See candidates' communication skills,
-                        personality, and cultural fit before you meet.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card
-                className={`cursor-pointer transition-all ${data.userType === 'both' ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-lg hover:scale-[1.01]'}`}
-                onClick={() => handleInputChange('userType', 'both')}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-lg bg-purple-100 text-purple-600">
-                      <Users className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">Both</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        I'm building my career AND looking to discover amazing talent for my team.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <Alert className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  <strong>Note:</strong> We're currently focused on helping job seekers create amazing VO profiles.
+                  Recruiter features are coming soon!
+                </AlertDescription>
+              </Alert>
             </div>
           </div>
         );
@@ -308,6 +390,33 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
               </div>
 
               <div className="space-y-4">
+                {/* Avatar Upload */}
+                <div className="flex flex-col items-center mb-6">
+                  <Label className="mb-3">Profile Picture (Optional)</Label>
+                  <div className="relative">
+                    <Avatar className="h-24 w-24">
+                      <AvatarImage src={avatarPreview || undefined} />
+                      <AvatarFallback className="text-2xl bg-primary/10">
+                        {data.full_name ? data.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : <User className="h-12 w-12" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <label
+                      htmlFor="avatar-upload"
+                      className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90 transition-colors"
+                    >
+                      <Camera className="h-4 w-4" />
+                    </label>
+                    <input
+                      id="avatar-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">Click camera icon to upload (max 5MB)</p>
+                </div>
+
                 <div>
                   <Label htmlFor="full_name">Full Name *</Label>
                   <Input
@@ -697,7 +806,15 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         <div className="mb-8">
           <div className="flex justify-between text-sm text-muted-foreground mb-2">
             <span>Step {currentStep} of {totalSteps}</span>
-            <span>{Math.round((currentStep / totalSteps) * 100)}% complete</span>
+            <div className="flex items-center gap-4">
+              {lastSaved && (
+                <span className="flex items-center gap-1 text-xs text-green-600">
+                  <Save className="h-3 w-3" />
+                  Saved {new Date().getTime() - lastSaved.getTime() < 5000 ? 'just now' : 'recently'}
+                </span>
+              )}
+              <span>{Math.round((currentStep / totalSteps) * 100)}% complete</span>
+            </div>
           </div>
           <Progress value={(currentStep / totalSteps) * 100} className="h-3" />
         </div>
@@ -725,25 +842,37 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                 Back
               </Button>
 
-              {currentStep < totalSteps ? (
-                <Button
-                  onClick={handleNext}
-                  disabled={!canProceed()}
-                  className="px-6"
-                >
-                  Continue
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleComplete}
-                  disabled={loading}
-                  className="px-6 bg-green-600 hover:bg-green-700"
-                >
-                  {loading ? 'Setting up...' : 'Complete Profile'}
-                  <CheckCircle className="h-4 w-4 ml-2" />
-                </Button>
-              )}
+              <div className="flex gap-2">
+                {canSkip() && currentStep < totalSteps && (
+                  <Button
+                    variant="ghost"
+                    onClick={handleSkip}
+                    className="px-6"
+                  >
+                    Skip for now
+                  </Button>
+                )}
+
+                {currentStep < totalSteps ? (
+                  <Button
+                    onClick={handleNext}
+                    disabled={!canProceed() && !canSkip()}
+                    className="px-6"
+                  >
+                    Continue
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={handleComplete}
+                    disabled={loading}
+                    className="px-6 bg-green-600 hover:bg-green-700"
+                  >
+                    {loading ? 'Setting up...' : 'Complete Profile'}
+                    <CheckCircle className="h-4 w-4 ml-2" />
+                  </Button>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

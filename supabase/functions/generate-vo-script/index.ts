@@ -8,6 +8,7 @@ const corsHeaders = {
 
 interface ScriptRequest {
   resumeText: string;
+  jobDescription?: string | null;
   scriptType: 'professional' | 'conversational' | 'enthusiastic' | 'storytelling';
   targetAudience: 'business' | 'creative' | 'tech' | 'general';
   scriptLength: '1min' | '2min' | '3min' | '5min';
@@ -90,7 +91,7 @@ serve(async (req) => {
       )
     }
 
-    const { resumeText, scriptType, targetAudience, scriptLength, userId } = requestData
+    const { resumeText, jobDescription, scriptType, targetAudience, scriptLength, userId } = requestData
 
     if (!resumeText?.trim()) {
       return new Response(
@@ -107,8 +108,8 @@ serve(async (req) => {
     const extractedInfo = await extractResumeInformation(resumeText)
 
     // Generate the script using GPT-5
-    console.log('Generating VO script...')
-    const generatedScript = await generateVOScript(extractedInfo, scriptType, targetAudience, scriptLength)
+    console.log('Generating VO script with job matching...', { hasJobDescription: !!jobDescription })
+    const generatedScript = await generateVOScript(extractedInfo, resumeText, jobDescription, scriptType, targetAudience, scriptLength)
 
     // Log the generation for analytics (optional)
     try {
@@ -298,7 +299,7 @@ IMPORTANT: Return ONLY the JSON object, no explanation, no markdown, no code blo
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o', // Use GPT-4o for better structured output
+        model: 'gpt-4-turbo', // Use GPT-4 Turbo for better structured output
         messages: [
           {
             role: 'system',
@@ -423,6 +424,8 @@ IMPORTANT: Return ONLY the JSON object, no explanation, no markdown, no code blo
 
 async function generateVOScript(
   info: ExtractedInfo,
+  resumeText: string,
+  jobDescription: string | null | undefined,
   scriptType: string,
   targetAudience: string,
   scriptLength: string
@@ -438,6 +441,30 @@ async function generateVOScript(
                    scriptLength === '2min' ? 300 :
                    scriptLength === '3min' ? 450 : 750
 
+  // Job matching instructions - only included if job description provided
+  const jobMatchingSection = jobDescription ? `
+
+JOB DESCRIPTION MATCHING:
+${jobDescription}
+
+CRITICAL CANDOR REQUIREMENTS:
+- ONLY reference skills, tools, and experience that are ACTUALLY present in the resume
+- For similar/transferable skills (e.g., MySQL in resume, PostgreSQL in job):
+  * Highlight the actual tool/technology the candidate has used
+  * Explain how their experience transfers naturally (e.g., "My experience with MySQL has given me strong database fundamentals that translate seamlessly to other relational databases")
+  * Emphasize adaptability and quick learning based on similar past experience
+- For skills in the job description NOT in the resume:
+  * DO NOT claim or imply the candidate has this experience
+  * DO NOT add these to the script
+- Match actual resume achievements to job requirements honestly
+- If the candidate has adjacent/similar experience, frame it as transferable knowledge
+
+RESUME TEXT FOR REFERENCE:
+${resumeText}
+
+When crafting the script, actively compare the job requirements with the resume content. Highlight genuine matches and thoughtfully present transferable skills where appropriate.
+` : ''
+
   const prompt = `
 Create a professional voice-over script for ${info.name}, a ${info.title} with ${info.experience} years of experience in ${info.industry}.
 
@@ -447,6 +474,7 @@ SCRIPT REQUIREMENTS:
 - Length: ${scriptLength} (approximately ${wordCount} words)
 - Professional but humanized language
 - Natural speech patterns suitable for voice recording
+- MINIMAL use of asterisks or special formatting - prioritize readability for recording
 
 KEY INFORMATION TO INCORPORATE:
 - Name: ${info.name}
@@ -457,20 +485,23 @@ KEY INFORMATION TO INCORPORATE:
 - Key Achievements: ${info.keyAchievements.join(', ')}
 - Companies: ${info.companies.join(', ')}
 - Education: ${info.education}
+${jobMatchingSection}
 
 SCRIPT STRUCTURE:
 1. Engaging opening (introduce name and role)
 2. Professional background and experience
-3. Key skills and achievements
-4. Unique value proposition
+${jobDescription ? '3. Relevant experience matching job requirements (with candor - only actual experience)' : '3. Key skills and achievements'}
+4. ${jobDescription ? 'Transferable skills and adaptability' : 'Unique value proposition'}
 5. Strong closing with call to action
 
-FORMATTING REQUIREMENTS:
-- Include [PAUSE - X seconds] markers for natural pacing
-- Use **bold** for words to emphasize
-- Add pronunciation guides for technical terms if needed
-- Include section headers for easy navigation
-- End with a recording guide section
+FORMATTING REQUIREMENTS FOR EASY READING:
+- Use clear section headers WITHOUT markdown symbols (e.g., "Opening" not "## Opening")
+- Use [PAUSE - 2s] or [PAUSE - 3s] markers for natural pacing (not asterisks)
+- Use [EMPHASIS] before key phrases instead of bold/asterisks
+- Use [SLOW DOWN] for important technical terms
+- Keep formatting MINIMAL - the script should be easy to read aloud without visual clutter
+- Add pronunciation guides ONLY for unusual names or terms: [pronounced: ...]
+- Use natural punctuation (periods, commas) for pacing instead of excessive formatting
 
 TONE GUIDELINES:
 - ${scriptType === 'professional' ? 'Authoritative, confident, but warm' :
@@ -478,7 +509,14 @@ TONE GUIDELINES:
      scriptType === 'enthusiastic' ? 'Energetic, passionate, but still professional' :
      'Personal narrative style, engaging storytelling approach'}
 
-Create a script that sounds natural when spoken aloud and showcases ${info.name} as the ideal candidate for ${targetAudience} roles in ${info.industry}.
+PROFESSIONAL SCRIPT STYLE:
+- Write in a natural, flowing manner suitable for voice recording
+- Avoid cluttered formatting - this is for the candidate to READ and SPEAK
+- Use clear, simple markers for direction: [PAUSE - 2s], [EMPHASIS], [SLOW DOWN]
+- Keep emphasis minimal - only on truly important words/phrases
+- The script should feel professional and be effortless to read aloud
+
+Create a script that sounds natural when spoken aloud and showcases ${info.name} as the ideal candidate${jobDescription ? ' for this specific role' : ` for ${targetAudience} roles in ${info.industry}`}.
 `
 
   try {
@@ -489,7 +527,7 @@ Create a script that sounds natural when spoken aloud and showcases ${info.name}
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o', // Use GPT-4o for best quality
+        model: 'gpt-4-turbo', // Use GPT-4 Turbo for best quality
         messages: [
           {
             role: 'system',

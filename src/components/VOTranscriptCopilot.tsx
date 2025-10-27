@@ -21,9 +21,12 @@ import {
   Brain,
   Mic,
   Clock,
-  Loader2
+  Loader2,
+  Edit3,
+  Save
 } from "lucide-react";
 import { generateVOScript, type ScriptGenerationRequest } from "@/lib/scriptGeneration";
+import ScriptEditor from "./ScriptEditor";
 
 interface VOTranscriptCopilotProps {
   onBack?: () => void;
@@ -34,12 +37,14 @@ const VOTranscriptCopilot = ({ onBack }: VOTranscriptCopilotProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [resumeText, setResumeText] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
   const [generatedScript, setGeneratedScript] = useState("");
   const [scriptType, setScriptType] = useState("professional");
   const [targetAudience, setTargetAudience] = useState("business");
   const [scriptLength, setScriptLength] = useState("2min");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
 
   const steps = [
     { number: 1, title: "Upload Resume", description: "Upload your CV/Resume" },
@@ -109,11 +114,13 @@ const VOTranscriptCopilot = ({ onBack }: VOTranscriptCopilotProps) => {
         scriptType,
         targetAudience,
         scriptLength,
-        resumeLength: resumeText.length
+        resumeLength: resumeText.length,
+        hasJobDescription: !!jobDescription.trim()
       });
 
       const request: ScriptGenerationRequest = {
         resumeText: resumeText.trim(),
+        jobDescription: jobDescription.trim() || undefined,
         scriptType: scriptType as ScriptGenerationRequest['scriptType'],
         targetAudience: targetAudience as ScriptGenerationRequest['targetAudience'],
         scriptLength: scriptLength as ScriptGenerationRequest['scriptLength']
@@ -176,6 +183,20 @@ const VOTranscriptCopilot = ({ onBack }: VOTranscriptCopilotProps) => {
     }
   };
 
+  // Show editor if requested
+  if (showEditor && generatedScript) {
+    return (
+      <ScriptEditor
+        initialScript={generatedScript}
+        onSave={(editedScript) => {
+          setGeneratedScript(editedScript);
+          setShowEditor(false);
+        }}
+        onClose={() => setShowEditor(false)}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -224,10 +245,10 @@ const VOTranscriptCopilot = ({ onBack }: VOTranscriptCopilotProps) => {
               </Alert>
             )}
 
-            {currentStep === 1 && <Step1Content uploadedFile={uploadedFile} onFileUpload={handleFileUpload} resumeText={resumeText} setResumeText={setResumeText} />}
+            {currentStep === 1 && <Step1Content uploadedFile={uploadedFile} onFileUpload={handleFileUpload} resumeText={resumeText} setResumeText={setResumeText} jobDescription={jobDescription} setJobDescription={setJobDescription} />}
             {currentStep === 2 && <Step2Content scriptType={scriptType} setScriptType={setScriptType} targetAudience={targetAudience} setTargetAudience={setTargetAudience} scriptLength={scriptLength} setScriptLength={setScriptLength} />}
             {currentStep === 3 && <Step3Content isProcessing={isProcessing} onGenerate={generateScript} />}
-            {currentStep === 4 && <Step4Content generatedScript={generatedScript} onCopy={copyScript} onDownload={downloadScript} copied={copied} />}
+            {currentStep === 4 && <Step4Content generatedScript={generatedScript} onCopy={copyScript} onDownload={downloadScript} copied={copied} onEdit={() => setShowEditor(true)} />}
 
             {/* Navigation */}
             <div className="flex justify-between pt-6">
@@ -309,7 +330,7 @@ const VOTranscriptCopilot = ({ onBack }: VOTranscriptCopilotProps) => {
 };
 
 // Step 1: Upload Resume
-const Step1Content = ({ uploadedFile, onFileUpload, resumeText, setResumeText }: any) => (
+const Step1Content = ({ uploadedFile, onFileUpload, resumeText, setResumeText, jobDescription, setJobDescription }: any) => (
   <div className="space-y-6">
     <Tabs defaultValue="paste" className="w-full">
       <TabsList className="grid w-full grid-cols-2">
@@ -399,6 +420,58 @@ Masters in Computer Science from Stanford"
         </Card>
       </TabsContent>
     </Tabs>
+
+    {/* Job Description Section */}
+    <Card className="elevated-card border-blue-200 dark:border-blue-800">
+      <CardContent className="p-6">
+        <div className="space-y-4">
+          <div className="flex items-center space-x-2 mb-2">
+            <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              🎯 Optional - Enhanced Matching
+            </Badge>
+          </div>
+          <Label htmlFor="job-description" className="text-base font-medium">
+            Job Description (Optional)
+          </Label>
+          <p className="text-sm text-muted-foreground">
+            Paste the job description to create a script that highlights your relevant experience and transferable skills.
+            The AI will match your actual experience to job requirements and suggest how similar tools/skills can transfer.
+          </p>
+          <Textarea
+            id="job-description"
+            placeholder="Example:
+
+We're seeking a Senior Full Stack Developer with 5+ years of experience in React and Node.js.
+
+Requirements:
+- Expert in React, Redux, TypeScript
+- Backend experience with Node.js, Express
+- Database design (PostgreSQL preferred)
+- Experience with AWS cloud services
+- Strong communication and teamwork skills
+
+Paste the full job description here for best results..."
+            value={jobDescription}
+            onChange={(e) => setJobDescription(e.target.value)}
+            className="min-h-[200px] font-mono text-sm"
+          />
+          {jobDescription.trim() && (
+            <div className="text-sm text-green-600 dark:text-green-500 flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              <span>Job description will be analyzed for skill matching</span>
+            </div>
+          )}
+          <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="text-sm text-blue-600 dark:text-blue-500">
+              <strong>Candor is paramount:</strong> The script will only reference your actual experience.
+              If you have similar but not exact skills (e.g., used MySQL instead of PostgreSQL),
+              the script will highlight the transferable knowledge and your ability to adapt.
+            </AlertDescription>
+          </Alert>
+        </div>
+      </CardContent>
+    </Card>
   </div>
 );
 
@@ -542,45 +615,79 @@ const Step3Content = ({ isProcessing, onGenerate }: any) => (
 );
 
 // Step 4: Review & Export
-const Step4Content = ({ generatedScript, onCopy, onDownload, copied }: any) => (
+const Step4Content = ({ generatedScript, onCopy, onDownload, copied, onEdit }: any) => (
   <div className="space-y-6">
-    <Card className="elevated-card">
+    <Card className="elevated-card border-green-200 dark:border-green-800">
       <CardHeader>
         <CardTitle className="flex items-center">
           <Check className="h-5 w-5 mr-2 text-green-600" />
           Your Script is Ready!
         </CardTitle>
         <CardDescription>
-          Review your generated voice-over script and download it when ready.
+          Review, edit, or save your professional voice-over script
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="border border-border rounded-lg p-4 bg-muted/30 max-h-96 overflow-y-auto">
-          <pre className="whitespace-pre-wrap text-sm">{generatedScript}</pre>
+        <div className="border border-border rounded-lg p-6 bg-muted/30 max-h-96 overflow-y-auto">
+          <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans">{generatedScript}</pre>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Button onClick={onEdit} className="w-full">
+            <Edit3 className="h-4 w-4 mr-2" />
+            Edit Script
+          </Button>
+          <Button variant="outline" onClick={onCopy} className="w-full">
+            {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+            {copied ? 'Copied!' : 'Copy'}
+          </Button>
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" onClick={onCopy}>
-            {copied ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
-            {copied ? 'Copied!' : 'Copy Script'}
-          </Button>
-          <Button variant="outline" onClick={onDownload}>
+          <Button variant="outline" onClick={onDownload} className="flex-1">
             <Download className="h-4 w-4 mr-2" />
-            Download TXT
+            Download
           </Button>
         </div>
 
         <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-start">
-            <Mic className="h-5 w-5 text-blue-600 mr-2 mt-0.5" />
+            <Mic className="h-5 w-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="font-medium text-blue-800 dark:text-blue-400">Ready to record?</p>
+              <p className="font-medium text-blue-800 dark:text-blue-400 mb-1">Ready to record?</p>
               <p className="text-sm text-blue-600 dark:text-blue-500">
-                Use this script with our video recorder to create your professional voice-over presentation.
+                Click "Edit Script" to refine your content, add personal touches, and format it for recording. You can save multiple versions to your script library.
               </p>
             </div>
           </div>
         </div>
+      </CardContent>
+    </Card>
+
+    <Card className="bg-accent/20 border-accent/30">
+      <CardContent className="p-6">
+        <h3 className="font-semibold mb-3 flex items-center">
+          <Brain className="h-5 w-5 mr-2" />
+          Next Steps
+        </h3>
+        <ul className="space-y-2 text-sm text-muted-foreground">
+          <li className="flex items-start">
+            <span className="mr-2">1.</span>
+            <span><strong>Edit & Personalize:</strong> Click "Edit Script" to customize the content and add your personal voice</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">2.</span>
+            <span><strong>Save to Library:</strong> Save your script to access it anytime from your dashboard</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">3.</span>
+            <span><strong>Practice & Record:</strong> Rehearse your script, then record your professional VO</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">4.</span>
+            <span><strong>Share Your Profile:</strong> Add the recording to your VO profile and share with recruiters</span>
+          </li>
+        </ul>
       </CardContent>
     </Card>
   </div>

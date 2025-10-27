@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Camera,
   Mic,
@@ -22,7 +24,9 @@ import {
   AlertCircle,
   Eye,
   Settings,
-  Sparkles
+  Sparkles,
+  FileText,
+  X
 } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/lib/supabase";
@@ -50,6 +54,7 @@ interface VOProfile {
 
 const VOBuilder = ({ onBack }: VOBuilderProps) => {
   const { profile } = useProfile();
+  const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [voProfile, setVOProfile] = useState<VOProfile>({
     title: '',
@@ -73,10 +78,27 @@ const VOBuilder = ({ onBack }: VOBuilderProps) => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  // Script template state
+  const [availableScripts, setAvailableScripts] = useState<any[]>([]);
+  const [selectedScript, setSelectedScript] = useState<any | null>(null);
+  const [showScriptPanel, setShowScriptPanel] = useState(false);
+  const [loadingScripts, setLoadingScripts] = useState(false);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const playbackRef = useRef<HTMLVideoElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Load scripts on mount and check for scriptId in URL
+  useEffect(() => {
+    loadScripts();
+    const params = new URLSearchParams(location.search);
+    const scriptId = params.get('scriptId');
+    if (scriptId) {
+      loadScriptById(scriptId);
+    }
+  }, [location.search]);
+
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) {
@@ -87,6 +109,41 @@ const VOBuilder = ({ onBack }: VOBuilderProps) => {
       }
     };
   }, [recordingState.stream]);
+
+  const loadScripts = async () => {
+    try {
+      setLoadingScripts(true);
+      const { data, error } = await supabase
+        .from('script_generations')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAvailableScripts(data || []);
+    } catch (error) {
+      console.error('Error loading scripts:', error);
+    } finally {
+      setLoadingScripts(false);
+    }
+  };
+
+  const loadScriptById = async (scriptId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('script_generations')
+        .select('*')
+        .eq('id', scriptId)
+        .single();
+
+      if (error) throw error;
+      if (data) {
+        setSelectedScript(data);
+        setShowScriptPanel(true);
+      }
+    } catch (error) {
+      console.error('Error loading script:', error);
+    }
+  };
 
   const steps = [
     { number: 1, title: "Profile Setup", description: "Configure your VO profile" },
@@ -396,6 +453,115 @@ const VOBuilder = ({ onBack }: VOBuilderProps) => {
                 </Select>
               </div>
 
+              <Separator />
+
+              <div className="space-y-3">
+                <Label>Script Template (Optional)</Label>
+
+                {availableScripts.length === 0 && !loadingScripts ? (
+                  <Alert className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+                    <FileText className="h-4 w-4" />
+                    <AlertDescription>
+                      <p className="font-medium text-blue-800 dark:text-blue-400 mb-2">No scripts found</p>
+                      <p className="text-sm text-blue-600 dark:text-blue-500 mb-3">
+                        Would you like to create a script first? Scripts help you stay organized and confident during recording.
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open('/dashboard/copilot', '_blank')}
+                          className="border-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                        >
+                          <Sparkles className="h-3 w-3 mr-1" />
+                          Generate Script
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            // Just continue without script
+                            setSelectedScript(null);
+                            setShowScriptPanel(false);
+                          }}
+                          className="text-blue-600 hover:text-blue-700 hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                        >
+                          Skip - Record Freely
+                        </Button>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                ) : (
+                  <>
+                    <Select
+                      value={selectedScript?.id || 'none'}
+                      onValueChange={(value) => {
+                        if (value === 'none') {
+                          setSelectedScript(null);
+                          setShowScriptPanel(false);
+                        } else if (value === 'create') {
+                          window.open('/dashboard/copilot', '_blank');
+                        } else {
+                          const script = availableScripts.find(s => s.id === value);
+                          setSelectedScript(script);
+                          setShowScriptPanel(true);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a script or skip" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">
+                          <div className="flex items-center">
+                            <span>No script - Record freely</span>
+                          </div>
+                        </SelectItem>
+                        {loadingScripts ? (
+                          <SelectItem value="loading" disabled>Loading scripts...</SelectItem>
+                        ) : (
+                          <>
+                            {availableScripts.map(script => (
+                              <SelectItem key={script.id} value={script.id}>
+                                {script.metadata?.title || 'Untitled Script'}
+                              </SelectItem>
+                            ))}
+                            <Separator className="my-2" />
+                            <SelectItem value="create">
+                              <div className="flex items-center text-primary">
+                                <Sparkles className="h-3 w-3 mr-2" />
+                                <span>Create New Script...</span>
+                              </div>
+                            </SelectItem>
+                          </>
+                        )}
+                      </SelectContent>
+                    </Select>
+
+                    {!selectedScript && availableScripts.length > 0 && (
+                      <Alert className="bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription className="text-sm text-amber-600 dark:text-amber-500">
+                          <p className="font-medium mb-1">Recording without a script?</p>
+                          <p>You can select a saved script above to guide your recording, or continue freely without one.</p>
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {selectedScript && (
+                      <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-500 bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="font-medium">Script selected: {selectedScript.metadata?.title || 'Untitled'}</span>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <p className="text-sm text-muted-foreground">
+                  Scripts provide structure and help you deliver confident, well-organized recordings
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label>Tags (Optional)</Label>
                 <div className="flex flex-wrap gap-2 mb-3">
@@ -422,17 +588,18 @@ const VOBuilder = ({ onBack }: VOBuilderProps) => {
 
       case 2:
         return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {voProfile.recordingType === 'video' ? <Camera className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
-                Recording Studio
-              </CardTitle>
-              <CardDescription>
-                Record your VO profile. Tip: Keep it under 2 minutes for best engagement!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  {voProfile.recordingType === 'video' ? <Camera className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                  Recording Studio
+                </CardTitle>
+                <CardDescription>
+                  Record your VO profile. Tip: Keep it under 2 minutes for best engagement!
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -521,6 +688,50 @@ const VOBuilder = ({ onBack }: VOBuilderProps) => {
               )}
             </CardContent>
           </Card>
+
+          {/* Script Panel */}
+          {selectedScript && (
+            <Card className="lg:sticky lg:top-6 h-fit">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Script Guide
+                  </CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedScript(null);
+                      setShowScriptPanel(false);
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <CardDescription>
+                  {selectedScript.metadata?.title || 'Your Script'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ScrollArea className="h-[500px] pr-4">
+                  <div className="space-y-4">
+                    <div className="text-xs text-muted-foreground flex items-center gap-4">
+                      <span>{selectedScript.word_count || selectedScript.generated_script.split(/\s+/).length} words</span>
+                      <span>~{Math.ceil((selectedScript.word_count || selectedScript.generated_script.split(/\s+/).length) / 150)} min</span>
+                    </div>
+                    <Separator />
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans">
+                        {selectedScript.generated_script}
+                      </pre>
+                    </div>
+                  </div>
+                </ScrollArea>
+              </CardContent>
+            </Card>
+          )}
+        </div>
         );
 
       case 3:

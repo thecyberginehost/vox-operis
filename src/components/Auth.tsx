@@ -116,7 +116,7 @@ const Auth = ({ onLogin }: AuthProps) => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-3 mb-4">
-            <img src="/vox-operis-logo.png" alt="Vox-Operis" className="h-10 w-10" />
+            <img src="https://ai-stream-solutions.s3.us-east-1.amazonaws.com/VO.png" alt="Vox-Operis" className="h-10 w-auto object-contain" />
             <span className="text-2xl font-bold">Vox-Operis</span>
           </div>
           <p className="text-muted-foreground">Your voice, your journey, your opportunity</p>

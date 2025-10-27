@@ -5,7 +5,7 @@ const GlobalFooter = () => {
         <div className="grid md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center space-x-3 mb-4">
-              <img src="/vox-operis-logo.png" alt="Vox-Operis" className="h-8 w-8" />
+              <img src="https://ai-stream-solutions.s3.us-east-1.amazonaws.com/VO.png" alt="Vox-Operis" className="h-8 w-auto object-contain" />
               <span className="text-xl font-bold">Vox-Operis</span>
             </div>
             <p className="text-muted-foreground mb-4">

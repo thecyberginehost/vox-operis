@@ -70,7 +70,7 @@ const VOCreationFlow = ({ onComplete }: VOCreationFlowProps) => {
               <X className="h-4 w-4" />
             </Button>
             <div className="flex items-center space-x-3">
-              <img src="/vox-operis-logo.png" alt="Vox-Operis" className="h-6 w-6" />
+              <img src="https://ai-stream-solutions.s3.us-east-1.amazonaws.com/VO.png" alt="Vox-Operis" className="h-6 w-auto object-contain" />
               <span className="text-lg font-semibold">Create New VO</span>
             </div>
           </div>

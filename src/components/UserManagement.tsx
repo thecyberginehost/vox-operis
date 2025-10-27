@@ -157,6 +157,38 @@ const UserManagement = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    setActionLoading(userId);
+    try {
+      // First, delete from profiles table (this should cascade delete related data)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      // Refresh the user list
+      await searchUsers(currentPage);
+
+      toast({
+        title: "User Deleted",
+        description: "User account has been permanently deleted.",
+      });
+    } catch (error: any) {
+      console.error('Delete user error:', error);
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: error.message || "Failed to delete user. They may need to be deactivated instead.",
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const exportUsers = () => {
     const csvContent = [
       ["Email", "Full Name", "Role", "Status", "Last Login", "Created"],

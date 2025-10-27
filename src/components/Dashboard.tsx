@@ -7,7 +7,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Home, Mic, Plus, Settings as SettingsIcon, HelpCircle, Crown, Clock, Shield, LogOut, User, FileText, Users, Briefcase, Search, Eye, UserCheck, ChevronDown, ChevronRight } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Home, Mic, Plus, Settings as SettingsIcon, HelpCircle, Crown, Clock, Shield, LogOut, User, FileText, Users, Briefcase, Search, Eye, UserCheck, ChevronDown, ChevronRight, Sparkles } from "lucide-react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useProfile } from "@/hooks/useProfile";
 import { supabase } from "@/lib/supabase";
@@ -22,6 +23,10 @@ import VOBuilder from "./VOBuilder";
 import VOEdit from "./VOEdit";
 import VOAnalytics from "./VOAnalytics";
 import Settings from "./Settings";
+import WelcomeModal from "./WelcomeModal";
+import MyScripts from "./MyScripts";
+import { EnhanceVODialog, EnhancementResults as EnhancementResultsType } from "./EnhanceVODialog";
+import { EnhancementResults } from "./EnhancementResults";
 
 interface DashboardProps {
   onLogout: () => void;
@@ -35,6 +40,7 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [currentView, setCurrentView] = useState<'candidate' | 'recruiter'>('candidate');
   const [expandedSections, setExpandedSections] = useState<string[]>(['main']);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const { profile, isAdmin, loading } = useProfile();
   const { signOut } = useAuth();
 
@@ -48,6 +54,14 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
       }
     }
   }, [profile?.user_type]);
+
+  // Check for welcome modal
+  useEffect(() => {
+    const shouldShow = localStorage.getItem('show_welcome_modal');
+    if (shouldShow === 'true' && currentPath === '/dashboard') {
+      setShowWelcomeModal(true);
+    }
+  }, [currentPath]);
 
   const isActive = (path: string) => {
     // Exact match for home route
@@ -103,8 +117,8 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
           title: 'My Work',
           items: [
             { title: "VO Profiles", url: "/dashboard/vos", icon: Mic },
-            { title: "Create Profile", url: "/dashboard/create", icon: Plus },
             { title: "Script Copilot", url: "/dashboard/copilot", icon: FileText },
+            { title: "My Scripts", url: "/dashboard/scripts", icon: FileText },
           ]
         },
         {
@@ -164,6 +178,11 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
     return <VOTranscriptCopilot onBack={() => navigate('/dashboard')} />;
   }
 
+  // Show My Scripts if accessing scripts route
+  if (currentPath === '/dashboard/scripts') {
+    return <MyScripts />;
+  }
+
   // Show profile page if accessing profile route
   if (currentPath === '/dashboard/profile') {
     return <Profile onBack={() => navigate('/dashboard')} />;
@@ -216,14 +235,17 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
+    <>
+      {showWelcomeModal && <WelcomeModal onClose={() => setShowWelcomeModal(false)} />}
+
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
         {/* Sidebar */}
         <Sidebar className="w-64 border-r border-border [&_[data-sidebar=menu-item]]:text-white">
           <SidebarContent>
             <div className="p-6 border-b border-border">
               <div className="flex items-center space-x-3 mb-4">
-                <img src="/vox-operis-logo.png" alt="Vox-Operis" className="h-8 w-8" />
+                <img src="https://ai-stream-solutions.s3.us-east-1.amazonaws.com/VO.png" alt="Vox-Operis" className="h-8 w-auto object-contain" />
                 <span className="text-xl font-bold">Vox-Operis</span>
               </div>
             </div>
@@ -398,8 +420,9 @@ const Dashboard = ({ onLogout }: DashboardProps) => {
             {currentPath === "/dashboard/support" && <Support />}
           </main>
         </div>
-      </div>
-    </SidebarProvider>
+        </div>
+      </SidebarProvider>
+    </>
   );
 };
 
@@ -445,10 +468,10 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
   if (loading) {
     return (
       <div className="max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">Welcome back, {getDisplayName()}!</h1>
+        <h1 className="text-3xl font-bold mb-6 text-gradient">Welcome back, {getDisplayName()}!</h1>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="elevated-card p-6">
+            <div key={i} className="modern-card p-6">
               <div className="animate-pulse">
                 <div className="h-4 bg-muted rounded mb-2"></div>
                 <div className="h-8 bg-muted rounded mb-2"></div>
@@ -473,7 +496,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
     if (currentView === 'candidate') {
       return (
         <>
-          <div className="elevated-card p-6">
+          <div className="modern-card card-hover-lift p-6">
             <h3 className="text-lg font-semibold mb-2">Your VO Profiles</h3>
             <div className="text-3xl font-bold text-primary">
               {dashboardStats?.vo_count || 0}
@@ -481,7 +504,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
             <p className="text-sm text-muted-foreground">Active profiles</p>
           </div>
 
-          <div className="elevated-card p-6">
+          <div className="modern-card card-hover-lift p-6">
             <h3 className="text-lg font-semibold mb-2">Profile Views</h3>
             <div className="text-3xl font-bold text-primary">
               {dashboardStats?.total_profile_views || 0}
@@ -491,7 +514,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
             </p>
           </div>
 
-          <div className="elevated-card p-6">
+          <div className="modern-card card-hover-lift p-6">
             <h3 className="text-lg font-semibold mb-2">New Opportunities</h3>
             <div className="text-3xl font-bold text-primary">
               {dashboardStats?.new_opportunities || 0}
@@ -503,7 +526,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
     } else {
       return (
         <>
-          <div className="elevated-card p-6">
+          <div className="modern-card card-hover-lift p-6">
             <h3 className="text-lg font-semibold mb-2">Active Job Posts</h3>
             <div className="text-3xl font-bold text-primary">
               {dashboardStats?.active_jobs || 0}
@@ -511,7 +534,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
             <p className="text-sm text-muted-foreground">Currently hiring</p>
           </div>
 
-          <div className="elevated-card p-6">
+          <div className="modern-card card-hover-lift p-6">
             <h3 className="text-lg font-semibold mb-2">Total Applications</h3>
             <div className="text-3xl font-bold text-primary">
               {dashboardStats?.total_applications || 0}
@@ -521,7 +544,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
             </p>
           </div>
 
-          <div className="elevated-card p-6">
+          <div className="modern-card card-hover-lift p-6">
             <h3 className="text-lg font-semibold mb-2">Talent Pool</h3>
             <div className="text-3xl font-bold text-primary">
               {dashboardStats?.available_candidates || 0}
@@ -535,7 +558,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
 
   return (
     <div className="max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">{getViewTitle()}</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gradient">{getViewTitle()}</h1>
 
       {/* View Mode Indicator */}
       <div className="mb-6">
@@ -550,13 +573,13 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
 
       {/* Quick Actions */}
       <div className="mt-8">
-        <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+        <h2 className="text-xl font-semibold mb-4 section-header">Quick Actions</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {currentView === 'candidate' ? (
             <>
               <Button
                 variant="outline"
-                className="h-auto p-4 flex flex-col gap-2"
+                className="modern-button h-auto p-4 flex flex-col gap-2"
                 onClick={() => window.location.href = '/dashboard/create'}
               >
                 <Plus className="h-5 w-5" />
@@ -564,7 +587,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
               </Button>
               <Button
                 variant="outline"
-                className="h-auto p-4 flex flex-col gap-2"
+                className="modern-button h-auto p-4 flex flex-col gap-2"
                 onClick={() => window.location.href = '/dashboard/talent'}
               >
                 <Users className="h-5 w-5" />
@@ -572,7 +595,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
               </Button>
               <Button
                 variant="outline"
-                className="h-auto p-4 flex flex-col gap-2"
+                className="modern-button h-auto p-4 flex flex-col gap-2"
                 onClick={() => window.location.href = '/dashboard/copilot'}
               >
                 <FileText className="h-5 w-5" />
@@ -580,7 +603,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
               </Button>
               <Button
                 variant="outline"
-                className="h-auto p-4 flex flex-col gap-2"
+                className="modern-button h-auto p-4 flex flex-col gap-2"
                 onClick={() => window.location.href = '/dashboard/vos'}
               >
                 <Mic className="h-5 w-5" />
@@ -591,7 +614,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
             <>
               <Button
                 variant="outline"
-                className="h-auto p-4 flex flex-col gap-2"
+                className="modern-button h-auto p-4 flex flex-col gap-2"
                 onClick={() => window.location.href = '/dashboard/post-job'}
               >
                 <Plus className="h-5 w-5" />
@@ -599,7 +622,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
               </Button>
               <Button
                 variant="outline"
-                className="h-auto p-4 flex flex-col gap-2"
+                className="modern-button h-auto p-4 flex flex-col gap-2"
                 onClick={() => window.location.href = '/dashboard/talent'}
               >
                 <Users className="h-5 w-5" />
@@ -607,7 +630,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
               </Button>
               <Button
                 variant="outline"
-                className="h-auto p-4 flex flex-col gap-2"
+                className="modern-button h-auto p-4 flex flex-col gap-2"
                 onClick={() => window.location.href = '/dashboard/saved'}
               >
                 <Eye className="h-5 w-5" />
@@ -615,7 +638,7 @@ const DashboardHome = ({ profile, currentView }: { profile: any; currentView: 'c
               </Button>
               <Button
                 variant="outline"
-                className="h-auto p-4 flex flex-col gap-2"
+                className="modern-button h-auto p-4 flex flex-col gap-2"
                 onClick={() => window.location.href = '/dashboard/my-jobs'}
               >
                 <Briefcase className="h-5 w-5" />
@@ -634,6 +657,10 @@ const MyVOs = () => {
   const [voProfiles, setVoProfiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showEnhanceDialog, setShowEnhanceDialog] = useState(false);
+  const [selectedVOForEnhancement, setSelectedVOForEnhancement] = useState<any | null>(null);
+  const [enhancementResults, setEnhancementResults] = useState<{[key: string]: EnhancementResultsType}>({});
+  const [activeTab, setActiveTab] = useState<'public' | 'job-specific'>('public');
   const { profile } = useProfile();
   const navigate = useNavigate();
 
@@ -695,11 +722,43 @@ const MyVOs = () => {
     navigate(`/dashboard/vo-analytics/${voId}`);
   };
 
+  const handleEnhance = (vo: any) => {
+    setSelectedVOForEnhancement(vo);
+    setShowEnhanceDialog(true);
+  };
+
+  const handleEnhancementComplete = (voId: string, results: EnhancementResultsType) => {
+    setEnhancementResults(prev => ({
+      ...prev,
+      [voId]: results
+    }));
+  };
+
+  const handleToggleVisibility = async (voId: string, newVisibility: 'public' | 'job-specific') => {
+    try {
+      const { error } = await supabase
+        .from('vo_profiles')
+        .update({ visibility_type: newVisibility })
+        .eq('id', voId);
+
+      if (error) throw error;
+
+      // Reload VOs to reflect changes
+      await loadVOProfiles();
+
+      setSuccessMessage(`VO visibility changed to ${newVisibility === 'public' ? 'Public' : 'Job-Specific'}`);
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (error) {
+      console.error('Error updating visibility:', error);
+      alert('Failed to update visibility');
+    }
+  };
+
   if (loading) {
     return (
       <div className="max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">My Voice-Over Profiles</h1>
-        <div className="elevated-card p-6">
+        <h1 className="text-3xl font-bold mb-6 text-gradient">My Voice-Over Profiles</h1>
+        <div className="modern-card p-6">
           <div className="animate-pulse">
             <div className="h-6 bg-muted rounded mb-4"></div>
             <div className="h-4 bg-muted rounded mb-4"></div>
@@ -717,14 +776,14 @@ const MyVOs = () => {
   if (voProfiles.length === 0) {
     return (
       <div className="max-w-4xl">
-        <h1 className="text-3xl font-bold mb-6">My Voice-Over Profiles</h1>
-        <div className="elevated-card p-8 text-center">
+        <h1 className="text-3xl font-bold mb-6 text-gradient">My Voice-Over Profiles</h1>
+        <div className="modern-card p-8 text-center">
           <Mic className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
           <h3 className="text-lg font-semibold mb-2">No Voice-Over Profiles Yet</h3>
           <p className="text-muted-foreground mb-4">
             Create your first voice-over profile to start showcasing your talent to potential clients.
           </p>
-          <Button>
+          <Button onClick={() => navigate('/dashboard/create')} className="modern-button">
             <Plus className="h-4 w-4 mr-2" />
             Create Your First VO Profile
           </Button>
@@ -733,9 +792,131 @@ const MyVOs = () => {
     );
   }
 
+  // Filter VOs by type
+  const publicVOs = voProfiles.filter((vo: any) => vo.visibility_type === 'public' || !vo.visibility_type);
+  const jobSpecificVOs = voProfiles.filter((vo: any) => vo.visibility_type === 'job-specific');
+
+  const renderVOList = (vos: any[]) => {
+    if (vos.length === 0) {
+      return (
+        <div className="modern-card p-8 text-center">
+          <Mic className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+          <h3 className="text-lg font-semibold mb-2">No VOs in this category yet</h3>
+          <p className="text-muted-foreground mb-4">
+            Create a {activeTab === 'public' ? 'public' : 'job-specific'} voice-over profile.
+          </p>
+          <Button onClick={() => navigate('/dashboard/create')} className="modern-button">
+            <Plus className="h-4 w-4 mr-2" />
+            Create VO Profile
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-6">
+        {vos.map((vo) => (
+          <div key={vo.id} className="space-y-4">
+            <div className="modern-card card-hover-lift p-6 smooth-transition">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">{vo.title}</h3>
+                <div className="flex items-center gap-2">
+                  <Badge variant={vo.is_active ? "default" : "secondary"}>
+                    {vo.is_active ? 'Active' : 'Inactive'}
+                  </Badge>
+                  {vo.is_featured && (
+                    <Badge variant="outline" className="text-yellow-600">
+                      Featured
+                    </Badge>
+                  )}
+                  {enhancementResults[vo.id] && (
+                    <Badge variant="outline" className="bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 border-purple-300 dark:border-purple-700">
+                      <Sparkles className="h-3 w-3 mr-1" />
+                      Enhanced
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <p className="text-muted-foreground mb-4">
+                {vo.description || 'No description provided.'}
+              </p>
+
+              {/* Visibility Toggle */}
+              <div className="mb-4 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Visibility:</span>
+                {vo.visibility_type === 'job-specific' || activeTab === 'job-specific' ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleToggleVisibility(vo.id, 'public')}
+                    className="modern-button text-xs"
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    Make Public
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleToggleVisibility(vo.id, 'job-specific')}
+                    className="modern-button text-xs"
+                  >
+                    <Briefcase className="h-3 w-3 mr-1" />
+                    Make Job-Specific
+                  </Button>
+                )}
+                <Badge variant="secondary" className="text-xs">
+                  {vo.visibility_type === 'job-specific' ? '🔒 Private' : '🌍 Public'}
+                </Badge>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <span>{vo.view_count} views</span>
+                  <span>{vo.like_count} likes</span>
+                  <span>{vo.share_count} shares</span>
+                </div>
+                <div className="flex space-x-2">
+                  <Button variant="outline" size="sm" className="modern-button" onClick={() => handleEdit(vo.id)}>Edit</Button>
+                  <Button variant="outline" size="sm" className="modern-button" onClick={() => handleShare(vo.id)}>Share</Button>
+                  <Button variant="outline" size="sm" className="modern-button" onClick={() => handleAnalytics(vo.id)}>Analytics</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleEnhance(vo)}
+                    className="modern-button bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
+                  >
+                    <Sparkles className="h-3 w-3 mr-1" />
+                    Enhance
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Show Enhancement Results */}
+            {enhancementResults[vo.id] && (
+              <div className="modern-card p-6 shadow-modern-lg">
+                <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-600" />
+                  AI Enhancement Results
+                </h4>
+                <EnhancementResults results={enhancementResults[vo.id]} />
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-4xl">
-      <h1 className="text-3xl font-bold mb-6">My Voice-Over Profiles</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-gradient">My Voice-Over Profiles</h1>
+        <Button onClick={() => navigate('/dashboard/create')} className="modern-button">
+          <Plus className="h-4 w-4 mr-2" />
+          Create New VO
+        </Button>
+      </div>
 
       {/* Success Message */}
       {successMessage && (
@@ -744,40 +925,52 @@ const MyVOs = () => {
         </div>
       )}
 
-      <div className="space-y-4">
-        {voProfiles.map((vo) => (
-          <div key={vo.id} className="elevated-card p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">{vo.title}</h3>
-              <div className="flex items-center gap-2">
-                <Badge variant={vo.is_active ? "default" : "secondary"}>
-                  {vo.is_active ? 'Active' : 'Inactive'}
-                </Badge>
-                {vo.is_featured && (
-                  <Badge variant="outline" className="text-yellow-600">
-                    Featured
-                  </Badge>
-                )}
-              </div>
-            </div>
-            <p className="text-muted-foreground mb-4">
-              {vo.description || 'No description provided.'}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'public' | 'job-specific')} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="public" className="flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Public VOs
+            <Badge variant="secondary" className="ml-2">{publicVOs.length}</Badge>
+          </TabsTrigger>
+          <TabsTrigger value="job-specific" className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4" />
+            Job-Specific VOs
+            <Badge variant="secondary" className="ml-2">{jobSpecificVOs.length}</Badge>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="public">
+          <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              <strong>Public VOs</strong> are searchable and visible in the talent directory. Recruiters can discover you through these profiles.
             </p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{vo.view_count} views</span>
-                <span>{vo.like_count} likes</span>
-                <span>{vo.share_count} shares</span>
-              </div>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(vo.id)}>Edit</Button>
-                <Button variant="outline" size="sm" onClick={() => handleShare(vo.id)}>Share</Button>
-                <Button variant="outline" size="sm" onClick={() => handleAnalytics(vo.id)}>Analytics</Button>
-              </div>
-            </div>
           </div>
-        ))}
-      </div>
+          {renderVOList(publicVOs)}
+        </TabsContent>
+
+        <TabsContent value="job-specific">
+          <div className="mb-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              <strong>Job-Specific VOs</strong> are private and tailored for specific job applications. These are not searchable publicly.
+            </p>
+          </div>
+          {renderVOList(jobSpecificVOs)}
+        </TabsContent>
+      </Tabs>
+
+      {/* Enhancement Dialog */}
+      {selectedVOForEnhancement && (
+        <EnhanceVODialog
+          open={showEnhanceDialog}
+          onOpenChange={setShowEnhanceDialog}
+          videoUrl={selectedVOForEnhancement.video_url}
+          voProfileId={selectedVOForEnhancement.id}
+          jobDescription={selectedVOForEnhancement.job_description}
+          onEnhancementComplete={(results) => {
+            handleEnhancementComplete(selectedVOForEnhancement.id, results);
+          }}
+        />
+      )}
     </div>
   );
 };
@@ -785,8 +978,8 @@ const MyVOs = () => {
 // Support Component
 const Support = () => (
   <div className="max-w-4xl">
-    <h1 className="text-3xl font-bold mb-6">Support</h1>
-    <div className="elevated-card p-6">
+    <h1 className="text-3xl font-bold mb-6 text-gradient">Support</h1>
+    <div className="modern-card p-6">
       <h3 className="text-lg font-semibold mb-4">How can we help?</h3>
       <p className="text-muted-foreground">
         Contact our support team for assistance with your voice-over profiles.

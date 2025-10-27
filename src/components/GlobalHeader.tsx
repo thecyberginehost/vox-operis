@@ -13,7 +13,7 @@ const GlobalHeader = ({ isAuthenticated = false, onGetStarted, onSignIn }: Globa
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-3">
           <NavLink to="/" className="flex items-center space-x-3">
-            <img src="/vox-operis-logo.png" alt="Vox-Operis" className="h-8 w-8" />
+            <img src="https://ai-stream-solutions.s3.us-east-1.amazonaws.com/VO.png" alt="Vox-Operis" className="h-8 w-auto object-contain" />
             <span className="text-xl font-bold text-foreground">Vox-Operis</span>
           </NavLink>
         </div>

@@ -37,43 +37,55 @@ const VOEdit = ({ onBack }: VOEditProps) => {
   const [tagInput, setTagInput] = useState('');
 
   useEffect(() => {
-    if (voId && profile?.id) {
-      loadVOProfile();
-    }
-  }, [voId, profile?.id]);
+    const loadVOProfile = async () => {
+      console.log('VOEdit: useEffect triggered', { voId, profileId: profile?.id });
 
-  const loadVOProfile = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('vo_profiles')
-        .select('*')
-        .eq('id', voId)
-        .eq('user_id', profile.id)
-        .single();
-
-      if (error) throw error;
-
-      if (!data) {
-        setError('VO Profile not found or you do not have permission to edit it.');
+      if (!voId || !profile?.id) {
+        console.log('VOEdit: Missing voId or profile.id, not loading');
+        setLoading(false);
         return;
       }
 
-      setVoProfile(data);
-      setFormData({
-        title: data.title || '',
-        description: data.description || '',
-        tags: data.tags || [],
-        is_active: data.is_active ?? true,
-        is_featured: data.is_featured ?? false,
-      });
-    } catch (err) {
-      console.error('Error loading VO profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load VO profile');
-    } finally {
-      setLoading(false);
-    }
-  };
+      try {
+        console.log('VOEdit: Starting to load VO profile...');
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('vo_profiles')
+          .select('*')
+          .eq('id', voId)
+          .eq('user_id', profile.id)
+          .single();
+
+        console.log('VOEdit: Query result', { data, error });
+
+        if (error) throw error;
+
+        if (!data) {
+          console.log('VOEdit: No data returned');
+          setError('VO Profile not found or you do not have permission to edit it.');
+          return;
+        }
+
+        console.log('VOEdit: VO profile loaded successfully', data);
+        setVoProfile(data);
+        setFormData({
+          title: data.title || '',
+          description: data.description || '',
+          tags: data.tags || [],
+          is_active: data.is_active ?? true,
+          is_featured: data.is_featured ?? false,
+        });
+      } catch (err) {
+        console.error('VOEdit: Error loading VO profile:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load VO profile');
+      } finally {
+        console.log('VOEdit: Setting loading to false');
+        setLoading(false);
+      }
+    };
+
+    loadVOProfile();
+  }, [voId, profile?.id]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
