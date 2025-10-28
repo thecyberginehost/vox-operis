@@ -459,10 +459,21 @@ CRITICAL CANDOR REQUIREMENTS:
 - Match actual resume achievements to job requirements honestly
 - If the candidate has adjacent/similar experience, frame it as transferable knowledge
 
+REAL-LIFE EXAMPLES REQUIREMENT:
+When the script references a specific skill, tool, or technology from the job description that the candidate has experience with, include a placeholder for a real-life example using this format:
+
+[ADD EXAMPLE: Describe a specific situation where you used {TOOL/SKILL} in your role at {COMPANY} to accomplish {RESULT}]
+
+For example:
+- "I have extensive experience with React..." [ADD EXAMPLE: Describe a specific project where you used React at {Company} to build {feature} that resulted in {outcome}]
+- "My background in project management..." [ADD EXAMPLE: Share a specific instance where you led a project at {Company} using {methodology} that delivered {result}]
+
+These placeholders prompt the user to add authentic, concrete examples that strengthen credibility.
+
 RESUME TEXT FOR REFERENCE:
 ${resumeText}
 
-When crafting the script, actively compare the job requirements with the resume content. Highlight genuine matches and thoughtfully present transferable skills where appropriate.
+When crafting the script, actively compare the job requirements with the resume content. Highlight genuine matches and thoughtfully present transferable skills where appropriate. INSERT [ADD EXAMPLE] placeholders for 2-3 key skills/experiences that match the job requirements.
 ` : ''
 
   const prompt = `
