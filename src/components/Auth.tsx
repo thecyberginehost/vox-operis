@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { useInviteCodes } from "@/hooks/useInviteCodes";
 
 interface AuthProps {
   onLogin: () => void;
@@ -17,11 +16,9 @@ const Auth = ({ onLogin }: AuthProps) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [inviteCode, setInviteCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const { signIn, signUp, signInWithOAuth } = useAuth();
-  const { validateInviteCode, useInviteCode } = useInviteCodes();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,29 +27,6 @@ const Auth = ({ onLogin }: AuthProps) => {
 
     try {
       if (isSignUp) {
-        // Validate invite code first for signup
-        if (!inviteCode.trim()) {
-          toast({
-            variant: "destructive",
-            title: "Invite Code Required",
-            description: "Please enter a valid invite code to register.",
-          });
-          setLoading(false);
-          return;
-        }
-
-        // Validate the invite code
-        const { valid, error: inviteError } = await validateInviteCode(inviteCode);
-        if (!valid) {
-          toast({
-            variant: "destructive",
-            title: "Invalid Invite Code",
-            description: inviteError?.message || "The invite code is invalid or expired.",
-          });
-          setLoading(false);
-          return;
-        }
-
         // Sign up the user with full name in metadata
         const { data: signUpData, error: signUpError } = await signUp(email, password, {
           full_name: fullName
@@ -65,9 +39,6 @@ const Auth = ({ onLogin }: AuthProps) => {
             description: signUpError.message,
           });
         } else if (signUpData.user) {
-          // Mark invite code as used
-          await useInviteCode(inviteCode, signUpData.user.id);
-
           toast({
             title: "Account Created",
             description: "Please check your email to confirm your account.",
@@ -175,20 +146,6 @@ const Auth = ({ onLogin }: AuthProps) => {
                   required
                 />
               </div>
-
-              {isSignUp && (
-                <div className="space-y-2">
-                  <Label htmlFor="inviteCode">Invite Code</Label>
-                  <Input
-                    id="inviteCode"
-                    type="text"
-                    placeholder="Enter your invite code"
-                    value={inviteCode}
-                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                    required
-                  />
-                </div>
-              )}
 
               {!isSignUp && (
                 <div className="text-right">
