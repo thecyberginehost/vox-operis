@@ -41,6 +41,7 @@ interface OnboardingData {
   career_goals: string[];
   education_level: string;
   languages: string[];
+  cv_url: string;
 
   // VO Preferences
   vo_style: 'professional' | 'conversational' | 'creative' | null;
@@ -80,6 +81,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
     career_goals: [],
     education_level: '',
     languages: ['English'],
+    cv_url: '',
     vo_style: null,
     include_portfolio: false,
     is_profile_public: true,
@@ -94,6 +96,9 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [uploadingCv, setUploadingCv] = useState(false);
 
   const totalSteps = data.userType === 'candidate' ? 5 : data.userType === 'recruiter' ? 3 : data.userType === 'both' ? 6 : 2;
 
@@ -271,6 +276,54 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
     }
   };
 
+  const handleCvChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file type - only PDF and DOCX
+      const validTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!validTypes.includes(file.type)) {
+        setError('Please select a PDF or DOCX file');
+        return;
+      }
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('CV must be less than 10MB');
+        return;
+      }
+
+      setCvFile(file);
+      setError(null);
+    }
+  };
+
+  const uploadCv = async (userId: string): Promise<string | null> => {
+    if (!cvFile) return null;
+
+    try {
+      setUploadingCv(true);
+      const fileExt = cvFile.name.split('.').pop();
+      const fileName = `${userId}-cv-${Date.now()}.${fileExt}`;
+      const filePath = `cvs/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-documents')
+        .upload(filePath, cvFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-documents')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (err) {
+      console.error('Error uploading CV:', err);
+      return null;
+    } finally {
+      setUploadingCv(false);
+    }
+  };
+
   const handleNext = () => {
     if (canProceed() && currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
@@ -288,13 +341,19 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
       setLoading(true);
       setError(null);
 
-      // Get current user ID for avatar upload
+      // Get current user ID for uploads
       const { data: { user } } = await supabase.auth.getUser();
       let avatarUrl = null;
+      let cvUrl = null;
 
       // Upload avatar if one was selected
       if (avatarFile && user) {
         avatarUrl = await uploadAvatar(user.id);
+      }
+
+      // Upload CV if one was selected
+      if (cvFile && user) {
+        cvUrl = await uploadCv(user.id);
       }
 
       const profileUpdates: any = {
@@ -305,6 +364,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         location: data.location.trim(),
         phone: data.phone || null,
         avatar_url: avatarUrl,
+        cv_url: cvUrl || data.cv_url || null,
         "years_of_experience": data.experience_years,
         "professional_summary": data.professional_summary.trim() || null,
         industry: data.industry,
@@ -498,6 +558,42 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                     className="mt-1"
                   />
                   <p className="text-xs text-muted-foreground mt-1">This will help personalize your VO script</p>
+                </div>
+
+                {/* CV Upload */}
+                <div className="border-2 border-dashed border-border rounded-lg p-6">
+                  <Label htmlFor="cv-upload" className="block mb-2">Upload CV/Resume (Optional)</Label>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    PDF or DOCX format, max 10MB. This will be viewable on your profile.
+                  </p>
+                  <div className="flex items-center gap-4">
+                    <input
+                      id="cv-upload"
+                      type="file"
+                      accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                      onChange={handleCvChange}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="cv-upload"
+                      className="flex items-center gap-2 px-4 py-2 border border-border rounded-md cursor-pointer hover:bg-accent transition-colors"
+                    >
+                      <Upload className="h-4 w-4" />
+                      <span className="text-sm">Choose File</span>
+                    </label>
+                    {cvFile && (
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-primary" />
+                        <span className="text-sm">{cvFile.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          ({(cvFile.size / 1024 / 1024).toFixed(2)} MB)
+                        </span>
+                      </div>
+                    )}
+                    {uploadingCv && (
+                      <span className="text-sm text-muted-foreground">Uploading...</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
