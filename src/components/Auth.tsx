@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,7 +17,7 @@ const Auth = ({ onLogin }: AuthProps) => {
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { signIn, signUp, signInWithOAuth } = useAuth();
+  const { signIn, signUp } = useAuth();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -69,17 +68,6 @@ const Auth = ({ onLogin }: AuthProps) => {
     }
   };
 
-  const handleOAuthSignIn = async (provider: 'google' | 'linkedin_oidc') => {
-    const { error } = await signInWithOAuth(provider);
-
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "OAuth Error",
-        description: error.message,
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-6">
@@ -159,36 +147,6 @@ const Auth = ({ onLogin }: AuthProps) => {
                 {loading ? "Loading..." : isSignUp ? "Create Account" : "Sign In"}
               </Button>
             </form>
-
-            <div className="mt-6">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-                </div>
-              </div>
-
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleOAuthSignIn('google')}
-                  disabled={loading}
-                >
-                  Google
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => handleOAuthSignIn('linkedin_oidc')}
-                  disabled={loading}
-                >
-                  LinkedIn
-                </Button>
-              </div>
-            </div>
           </CardContent>
 
           <CardFooter className="flex justify-center">
