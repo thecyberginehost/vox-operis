@@ -110,7 +110,15 @@ export const useVideoRecorder = (options: UseVideoRecorderOptions = {}): UseVide
 
       // Auto-stop at max duration
       if (elapsed >= maxDuration) {
-        stopRecording();
+        // Stop recording directly here to avoid circular dependency
+        if (mediaRecorderRef.current && (mediaRecorderRef.current.state === 'recording' || mediaRecorderRef.current.state === 'paused')) {
+          mediaRecorderRef.current.stop();
+
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        }
       }
     }
   }, [maxDuration]);
@@ -227,6 +235,9 @@ export const useVideoRecorder = (options: UseVideoRecorderOptions = {}): UseVide
         const videoBlob = new Blob(videoChunksRef.current, { type: recorder.mimeType });
         const videoUrl = URL.createObjectURL(videoBlob);
 
+        // Calculate final duration at time of stopping
+        const finalDuration = startTimeRef.current ? (Date.now() - startTimeRef.current) / 1000 : 0;
+
         try {
           // Generate thumbnail
           const thumbnailUrl = await generateThumbnail(videoBlob);
@@ -234,7 +245,7 @@ export const useVideoRecorder = (options: UseVideoRecorderOptions = {}): UseVide
           const recording: VideoRecording = {
             blob: videoBlob,
             url: videoUrl,
-            duration: duration,
+            duration: finalDuration,
             timestamp: new Date(),
             thumbnailUrl
           };
@@ -246,7 +257,7 @@ export const useVideoRecorder = (options: UseVideoRecorderOptions = {}): UseVide
           const recording: VideoRecording = {
             blob: videoBlob,
             url: videoUrl,
-            duration: duration,
+            duration: finalDuration,
             timestamp: new Date()
           };
 
@@ -296,7 +307,7 @@ export const useVideoRecorder = (options: UseVideoRecorderOptions = {}): UseVide
 
       setError(errorMessage);
     }
-  }, [initializeCamera, mimeType, videoBitsPerSecond, audioBitsPerSecond, duration, updateDuration, generateThumbnail]);
+  }, [initializeCamera, mimeType, videoBitsPerSecond, audioBitsPerSecond, updateDuration, generateThumbnail]);
 
   // Stop recording
   const stopRecording = useCallback(() => {
