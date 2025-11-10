@@ -100,7 +100,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [uploadingCv, setUploadingCv] = useState(false);
 
-  const totalSteps = data.userType === 'candidate' ? 5 : data.userType === 'recruiter' ? 3 : data.userType === 'both' ? 6 : 2;
+  const totalSteps = 2; // CV Upload + What makes you recognisable
 
   // Auto-save progress to localStorage
   useEffect(() => {
@@ -192,8 +192,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const canProceed = () => {
     switch (currentStep) {
       case 1: return true; // Step 1 CV upload is optional, can always proceed
-      case 2: return true; // Step 2 VO style selection is optional, can always proceed
-      case 3:
+      case 2:
         return data.soft_skills.length > 0 && data.career_goals.length > 0;
       default:
         return true;
@@ -201,8 +200,8 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   };
 
   const canSkip = () => {
-    // Steps 2, 3 and 4 are optional and can be skipped
-    return currentStep === 2 || currentStep === 3 || currentStep === 4;
+    // Step 2 is optional and can be skipped
+    return currentStep === 2;
   };
 
   const handleSkip = () => {
@@ -447,167 +446,6 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
 
       case 2:
         return (
-          <div className="space-y-8">
-            <div className="text-center">
-              <h2 className="text-3xl md:text-4xl font-medium text-white mb-3">
-                Your VO style
-              </h2>
-              <p className="text-base text-gray-400">
-                How do you want to present yourself to employers?
-              </p>
-            </div>
-
-            <div className="max-w-2xl mx-auto space-y-8">
-              {/* VO Style Preference */}
-              <div>
-                <Label className="text-sm text-gray-400 mb-4 block">VO Style Preference</Label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card
-                    className={`cursor-pointer transition-all bg-[#1a1f2e] border-2 ${
-                      data.vo_style === 'professional'
-                        ? 'border-[#d97706] bg-[#1f2535]'
-                        : 'border-[#2a3142] hover:border-[#3a4152]'
-                    }`}
-                    onClick={() => handleInputChange('vo_style', 'professional')}
-                  >
-                    <CardContent className="p-6 text-center">
-                      <div className="flex justify-center mb-3">
-                        <div className="p-3 rounded-lg bg-blue-500/10">
-                          <Briefcase className="h-6 w-6 text-blue-400" />
-                        </div>
-                      </div>
-                      <h4 className="font-semibold text-white mb-1">Professional</h4>
-                      <p className="text-xs text-gray-400">Polished, executive-ready</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className={`cursor-pointer transition-all bg-[#1a1f2e] border-2 ${
-                      data.vo_style === 'conversational'
-                        ? 'border-[#d97706] bg-[#1f2535]'
-                        : 'border-[#2a3142] hover:border-[#3a4152]'
-                    }`}
-                    onClick={() => handleInputChange('vo_style', 'conversational')}
-                  >
-                    <CardContent className="p-6 text-center">
-                      <div className="flex justify-center mb-3">
-                        <div className="p-3 rounded-lg bg-green-500/10">
-                          <Users className="h-6 w-6 text-green-400" />
-                        </div>
-                      </div>
-                      <h4 className="font-semibold text-white mb-1">Conversational</h4>
-                      <p className="text-xs text-gray-400">Approachable, authentic</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card
-                    className={`cursor-pointer transition-all bg-[#1a1f2e] border-2 ${
-                      data.vo_style === 'creative'
-                        ? 'border-[#d97706] bg-[#1f2535]'
-                        : 'border-[#2a3142] hover:border-[#3a4152]'
-                    }`}
-                    onClick={() => handleInputChange('vo_style', 'creative')}
-                  >
-                    <CardContent className="p-6 text-center">
-                      <div className="flex justify-center mb-3">
-                        <div className="p-3 rounded-lg bg-purple-500/10">
-                          <Lightbulb className="h-6 w-6 text-purple-400" />
-                        </div>
-                      </div>
-                      <h4 className="font-semibold text-white mb-1">Creative</h4>
-                      <p className="text-xs text-gray-400">Dynamic, innovative</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Include Portfolio */}
-              <div className="border border-[#2a3142] rounded-lg p-5 bg-[#1a1f2e]">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <Label className="text-base font-medium text-white mb-1 block">Include Portfolio</Label>
-                    <p className="text-sm text-gray-400">
-                      Showcase sample projects that your VO
-                    </p>
-                  </div>
-                  <Switch
-                    checked={data.include_portfolio}
-                    onCheckedChange={(checked) => handleInputChange('include_portfolio', checked)}
-                    className="ml-4 flex-shrink-0"
-                  />
-                </div>
-              </div>
-
-              {/* Next Step Info */}
-              <Alert className="bg-[#0f1419] border-[#2a3142]">
-                <Video className="h-4 w-4 text-blue-400" />
-                <AlertDescription className="text-sm text-gray-400">
-                  <strong className="text-white">Next:</strong> You'll create your VO (Video + Voice) profile that replaces traditional CVs. This dynamic profile will showcase your personality, communication skills, and professional story.
-                </AlertDescription>
-              </Alert>
-            </div>
-          </div>
-        );
-
-        if (data.userType === 'recruiter') {
-          return (
-            <div className="space-y-6">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">About Your Organization</h2>
-                <p className="text-muted-foreground">Help us understand your hiring needs</p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="company_name">Company Name *</Label>
-                  <Input
-                    id="company_name"
-                    value={data.company_name}
-                    onChange={(e) => handleInputChange('company_name', e.target.value)}
-                    placeholder="Your organization"
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label>Company Size *</Label>
-                  <Select value={data.company_size} onValueChange={(value) => handleInputChange('company_size', value)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select company size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companySizes.map((size) => (
-                        <SelectItem key={size} value={size}>
-                          {size}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Typical Hiring Volume</Label>
-                  <Select value={data.hiring_volume} onValueChange={(value) => handleInputChange('hiring_volume', value)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="How many people do you typically hire?" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {hiringVolumes.map((volume) => (
-                        <SelectItem key={volume} value={volume}>
-                          {volume}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          );
-        }
-        return null;
-
-      case 3:
-        return (
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold mb-2">What makes you recognisable</h2>
@@ -660,75 +498,6 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                   <p className="text-sm text-red-500 mt-2">Please select at least one career goal</p>
                 )}
               </div>
-            </div>
-          </div>
-        );
-
-      case 4:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">Your VO Profile Style</h2>
-              <p className="text-muted-foreground">How do you want to present yourself to employers?</p>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <Label>VO Style Preference</Label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
-                  <Card
-                    className={`cursor-pointer transition-all ${data.vo_style === 'professional' ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'}`}
-                    onClick={() => handleInputChange('vo_style', 'professional')}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <Briefcase className="h-6 w-6 mx-auto mb-2 text-blue-600" />
-                      <h4 className="font-semibold">Professional</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Polished, executive-ready</p>
-                    </CardContent>
-                  </Card>
-                  <Card
-                    className={`cursor-pointer transition-all ${data.vo_style === 'conversational' ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'}`}
-                    onClick={() => handleInputChange('vo_style', 'conversational')}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <Users className="h-6 w-6 mx-auto mb-2 text-green-600" />
-                      <h4 className="font-semibold">Conversational</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Approachable, authentic</p>
-                    </CardContent>
-                  </Card>
-                  <Card
-                    className={`cursor-pointer transition-all ${data.vo_style === 'creative' ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-md'}`}
-                    onClick={() => handleInputChange('vo_style', 'creative')}
-                  >
-                    <CardContent className="p-4 text-center">
-                      <Lightbulb className="h-6 w-6 mx-auto mb-2 text-purple-600" />
-                      <h4 className="font-semibold">Creative</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Dynamic, innovative</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-4 border rounded-lg">
-                <div className="space-y-1">
-                  <Label className="text-base font-medium">Include Portfolio</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Show work samples alongside your VO
-                  </p>
-                </div>
-                <Switch
-                  checked={data.include_portfolio}
-                  onCheckedChange={(checked) => handleInputChange('include_portfolio', checked)}
-                />
-              </div>
-
-              <Alert>
-                <Video className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Next:</strong> You'll create your VO (Video + Voice profile) that replaces traditional CVs.
-                  This dynamic profile will showcase your personality, communication skills, and professional story.
-                </AlertDescription>
-              </Alert>
             </div>
           </div>
         );
