@@ -192,14 +192,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const canProceed = () => {
     switch (currentStep) {
       case 1: return true; // Step 1 CV upload is optional, can always proceed
-      case 2:
-        if (data.userType === 'candidate' || data.userType === 'both') {
-          return data.full_name.trim() && data.current_role.trim() && data.location.trim();
-        }
-        if (data.userType === 'recruiter') {
-          return data.company_name.trim() && data.company_size;
-        }
-        return false;
+      case 2: return true; // Step 2 VO style selection is optional, can always proceed
       case 3:
         if (data.userType === 'candidate' || data.userType === 'both') {
           return data.industry && data.skills.length > 0;
@@ -213,8 +206,8 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   };
 
   const canSkip = () => {
-    // Steps 4 and 5 are optional and can be skipped
-    return currentStep === 4 || currentStep === 5;
+    // Steps 2, 4 and 5 are optional and can be skipped
+    return currentStep === 2 || currentStep === 4 || currentStep === 5;
   };
 
   const handleSkip = () => {
@@ -458,185 +451,100 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         );
 
       case 2:
-        if (data.userType === 'candidate' || data.userType === 'both') {
-          return (
-            <div className="space-y-6">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">Let's Build Your Professional Story</h2>
-                <p className="text-muted-foreground">Start with the basics - we'll bring it to life with your VO</p>
+        return (
+          <div className="space-y-8">
+            <div className="text-center">
+              <h2 className="text-3xl md:text-4xl font-medium text-white mb-3">
+                Your VO style
+              </h2>
+              <p className="text-base text-gray-400">
+                How do you want to present yourself to employers?
+              </p>
+            </div>
+
+            <div className="max-w-2xl mx-auto space-y-8">
+              {/* VO Style Preference */}
+              <div>
+                <Label className="text-sm text-gray-400 mb-4 block">VO Style Preference</Label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card
+                    className={`cursor-pointer transition-all bg-[#1a1f2e] border-2 ${
+                      data.vo_style === 'professional'
+                        ? 'border-[#d97706] bg-[#1f2535]'
+                        : 'border-[#2a3142] hover:border-[#3a4152]'
+                    }`}
+                    onClick={() => handleInputChange('vo_style', 'professional')}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="flex justify-center mb-3">
+                        <div className="p-3 rounded-lg bg-blue-500/10">
+                          <Briefcase className="h-6 w-6 text-blue-400" />
+                        </div>
+                      </div>
+                      <h4 className="font-semibold text-white mb-1">Professional</h4>
+                      <p className="text-xs text-gray-400">Polished, executive-ready</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className={`cursor-pointer transition-all bg-[#1a1f2e] border-2 ${
+                      data.vo_style === 'conversational'
+                        ? 'border-[#d97706] bg-[#1f2535]'
+                        : 'border-[#2a3142] hover:border-[#3a4152]'
+                    }`}
+                    onClick={() => handleInputChange('vo_style', 'conversational')}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="flex justify-center mb-3">
+                        <div className="p-3 rounded-lg bg-green-500/10">
+                          <Users className="h-6 w-6 text-green-400" />
+                        </div>
+                      </div>
+                      <h4 className="font-semibold text-white mb-1">Conversational</h4>
+                      <p className="text-xs text-gray-400">Approachable, authentic</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card
+                    className={`cursor-pointer transition-all bg-[#1a1f2e] border-2 ${
+                      data.vo_style === 'creative'
+                        ? 'border-[#d97706] bg-[#1f2535]'
+                        : 'border-[#2a3142] hover:border-[#3a4152]'
+                    }`}
+                    onClick={() => handleInputChange('vo_style', 'creative')}
+                  >
+                    <CardContent className="p-6 text-center">
+                      <div className="flex justify-center mb-3">
+                        <div className="p-3 rounded-lg bg-purple-500/10">
+                          <Lightbulb className="h-6 w-6 text-purple-400" />
+                        </div>
+                      </div>
+                      <h4 className="font-semibold text-white mb-1">Creative</h4>
+                      <p className="text-xs text-gray-400">Dynamic, innovative</p>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
 
-              <div className="space-y-4">
-                {/* Avatar Upload */}
-                <div className="flex flex-col items-center mb-6">
-                  <Label className="mb-3">Profile Picture (Optional)</Label>
-                  <div className="relative">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src={avatarPreview || undefined} />
-                      <AvatarFallback className="text-2xl bg-primary/10">
-                        {data.full_name ? data.full_name.split(' ').map(n => n[0]).join('').toUpperCase() : <User className="h-12 w-12" />}
-                      </AvatarFallback>
-                    </Avatar>
-                    <label
-                      htmlFor="avatar-upload"
-                      className="absolute bottom-0 right-0 bg-primary text-primary-foreground rounded-full p-2 cursor-pointer hover:bg-primary/90 transition-colors"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </label>
-                    <input
-                      id="avatar-upload"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarChange}
-                      className="hidden"
-                    />
+              {/* Include Portfolio */}
+              <div className="border border-[#2a3142] rounded-lg p-5 bg-[#1a1f2e]">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <Label className="text-base font-medium text-white mb-1 block">Include Portfolio</Label>
+                    <p className="text-sm text-gray-400">
+                      We'll create your VO (Video + Voice) profile that replaces traditional CVs. This dynamic profile will showcase your personality, communication skills, and professional story.
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-2">Click camera icon to upload (max 5MB)</p>
-                </div>
-
-                <div>
-                  <Label htmlFor="full_name">Full Name *</Label>
-                  <Input
-                    id="full_name"
-                    value={data.full_name}
-                    onChange={(e) => handleInputChange('full_name', e.target.value)}
-                    placeholder="Your professional name"
-                    className="mt-1"
+                  <Switch
+                    checked={data.include_portfolio}
+                    onCheckedChange={(checked) => handleInputChange('include_portfolio', checked)}
+                    className="ml-4 flex-shrink-0"
                   />
-                </div>
-
-                <div>
-                  <Label htmlFor="current_role">Current Role / Career Focus *</Label>
-                  <Input
-                    id="current_role"
-                    value={data.current_role}
-                    onChange={(e) => handleInputChange('current_role', e.target.value)}
-                    placeholder="e.g., Senior Marketing Manager, Full-Stack Developer, Career Changer"
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">This appears as your headline</p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="location">Location *</Label>
-                    <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="location"
-                        value={data.location}
-                        onChange={(e) => handleInputChange('location', e.target.value)}
-                        placeholder="London, UK"
-                        className="pl-10 mt-1"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <div className="mt-1">
-                      <PhoneInput
-                        id="phone"
-                        value={data.phone}
-                        onChange={(value) => handleInputChange('phone', value || '')}
-                        defaultCountry="GB"
-                        international
-                        countryCallingCodeEditable={false}
-                        placeholder="Enter phone number"
-                        className="phone-input-dark"
-                        style={{
-                          '--PhoneInput-color': '#e5e7eb',
-                          '--PhoneInputInternationalIconPhone-opacity': '0.8',
-                          '--PhoneInputInternationalIconGlobe-opacity': '0.65',
-                          '--PhoneInputCountrySelect-marginRight': '0.35em',
-                          '--PhoneInputCountrySelectArrow-width': '0.3em',
-                          '--PhoneInputCountrySelectArrow-marginLeft': 'var(--PhoneInputCountrySelect-marginRight)',
-                          '--PhoneInputCountrySelectArrow-borderWidth': '1px',
-                          '--PhoneInputCountrySelectArrow-opacity': '0.45',
-                          '--PhoneInputCountrySelectArrow-color': 'currentColor',
-                          '--PhoneInputCountrySelectArrow-color--focus': 'currentColor',
-                          '--PhoneInputCountrySelectArrow-transform': 'rotate(45deg)',
-                          '--PhoneInputCountryFlag-aspectRatio': '1.5',
-                          '--PhoneInputCountryFlag-height': '1em',
-                          '--PhoneInputCountryFlag-borderWidth': '1px',
-                          '--PhoneInputCountryFlag-borderColor': 'rgba(0,0,0,0.5)',
-                          '--PhoneInputCountryFlag-borderColor--focus': 'currentColor',
-                          '--PhoneInputCountryFlag-backgroundColor--loading': 'rgba(0,0,0,0.1)'
-                        } as React.CSSProperties}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Years of Experience: {data.experience_years}</Label>
-                  <div className="px-2 py-4">
-                    <Slider
-                      value={[data.experience_years]}
-                      onValueChange={([value]) => handleInputChange('experience_years', value)}
-                      max={20}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                      <span>0 years</span>
-                      <span>20+ years</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="professional_summary">What drives you? (Optional)</Label>
-                  <Textarea
-                    id="professional_summary"
-                    value={data.professional_summary}
-                    onChange={(e) => handleInputChange('professional_summary', e.target.value)}
-                    placeholder="Tell us what motivates you, what you're passionate about, or what makes you unique..."
-                    rows={3}
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">This will help personalize your VO script</p>
-                </div>
-
-                {/* CV Upload */}
-                <div className="border-2 border-dashed border-border rounded-lg p-6">
-                  <Label htmlFor="cv-upload" className="block mb-2">Upload CV/Resume (Optional)</Label>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    PDF or DOCX format, max 10MB. This will be viewable on your profile.
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <input
-                      id="cv-upload"
-                      type="file"
-                      accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                      onChange={handleCvChange}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="cv-upload"
-                      className="flex items-center gap-2 px-4 py-2 border border-border rounded-md cursor-pointer hover:bg-accent transition-colors"
-                    >
-                      <Upload className="h-4 w-4" />
-                      <span className="text-sm">Choose File</span>
-                    </label>
-                    {cvFile && (
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-primary" />
-                        <span className="text-sm">{cvFile.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          ({(cvFile.size / 1024 / 1024).toFixed(2)} MB)
-                        </span>
-                      </div>
-                    )}
-                    {uploadingCv && (
-                      <span className="text-sm text-muted-foreground">Uploading...</span>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
-          );
-        }
+          </div>
+        );
 
         if (data.userType === 'recruiter') {
           return (
