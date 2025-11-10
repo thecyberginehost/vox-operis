@@ -68,7 +68,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const [data, setData] = useState<OnboardingData>({
-    userType: null,
+    userType: 'candidate', // Default to candidate since we're focused on job seekers
     full_name: '',
     current_role: '',
     location: '',
@@ -191,7 +191,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
 
   const canProceed = () => {
     switch (currentStep) {
-      case 1: return data.userType !== null;
+      case 1: return true; // Step 1 CV upload is optional, can always proceed
       case 2:
         if (data.userType === 'candidate' || data.userType === 'both') {
           return data.full_name.trim() && data.current_role.trim() && data.location.trim();
@@ -402,52 +402,57 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
       case 1:
         return (
           <div className="space-y-8">
-            <div className="text-center space-y-4">
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                Welcome to the Future of Work
+            <div className="text-center">
+              <h2 className="text-3xl md:text-4xl font-medium text-white mb-8">
+                Welcome to Vox Operis. The voice of your work
               </h2>
-              <p className="text-xl md:text-2xl text-gray-400 mb-3">
-                A CV tells. A VO shows.
-              </p>
-              <p className="text-lg text-gray-400">
-                What brings you to Vox-Operis?
-              </p>
             </div>
 
-            <div className="max-w-2xl mx-auto space-y-4">
-              <Card
-                className={`cursor-pointer transition-all bg-[#1a1f2e] border-[#2a3142] ${
-                  data.userType === 'candidate'
-                    ? 'ring-2 ring-[#d97706] bg-[#1f2535]'
-                    : 'hover:bg-[#1f2535] hover:border-[#3a4152]'
-                }`}
-                onClick={() => handleInputChange('userType', 'candidate')}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="p-4 rounded-xl bg-blue-500/10 text-blue-400 flex-shrink-0">
-                      <User className="h-7 w-7" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-xl text-white mb-2">
-                        I'm Looking for Work
-                      </h3>
-                      <p className="text-sm text-gray-400 leading-relaxed">
-                        Create a dynamic profile that showcases your personality, skills, and achievements.
-                        Show employers who you are, not just where you've worked.
-                      </p>
+            <div className="max-w-xl mx-auto">
+              <div className="border-2 border-dashed border-[#2a3142] rounded-lg p-8">
+                <div className="text-center space-y-4">
+                  <h3 className="text-xl text-white font-medium">
+                    Hi, can we have your CV?
+                  </h3>
+                  <p className="text-sm text-gray-400 leading-relaxed max-w-md mx-auto">
+                    We will use it to help build your VO script so you have a baseline to work from when recording. We'll make this so simple for you :)
+                  </p>
+
+                  <div className="pt-4">
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-400">Upload your CV</p>
+                      <p className="text-xs text-gray-500">You can add it now, or do it later if you prefer</p>
+
+                      <div className="flex flex-col items-center gap-3 pt-2">
+                        <input
+                          id="cv-upload-step1"
+                          type="file"
+                          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          onChange={handleCvChange}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="cv-upload-step1"
+                          className="flex items-center gap-2 px-6 py-2 border border-[#2a3142] rounded-md cursor-pointer hover:bg-[#1a1f2e] transition-colors text-gray-300 hover:text-white"
+                        >
+                          <Upload className="h-4 w-4" />
+                          <span className="text-sm">Choose</span>
+                        </label>
+
+                        {cvFile && (
+                          <div className="flex items-center gap-2 text-sm text-gray-300">
+                            <FileText className="h-4 w-4 text-[#f59e0b]" />
+                            <span>{cvFile.name}</span>
+                            <span className="text-xs text-gray-500">
+                              ({(cvFile.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              <Alert className="bg-[#1a1f2e] border-[#2a3142] text-gray-300">
-                <AlertCircle className="h-5 w-5 text-blue-400" />
-                <AlertDescription className="text-sm">
-                  <strong className="text-white">Note:</strong> We're currently focused on helping job seekers create amazing VO profiles.
-                  Recruiter features are coming soon!
-                </AlertDescription>
-              </Alert>
+                </div>
+              </div>
             </div>
           </div>
         );
