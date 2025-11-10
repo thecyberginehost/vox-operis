@@ -537,14 +537,19 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
               </p>
             </div>
 
-            <Alert className="bg-[#1a1f2e] border-[#2a3142]">
-              <AlertCircle className="h-4 w-4 text-[#f59e0b]" />
-              <AlertDescription className="text-gray-300">
-                <strong className="text-white">What to include:</strong> Briefly introduce yourself, mention what
-                makes you unique (your recognisable traits), and why you're passionate about your work.
-                Keep it natural and conversational - aim for 60-120 seconds.
-              </AlertDescription>
-            </Alert>
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                className="border-[#f59e0b] text-[#f59e0b] hover:bg-[#f59e0b] hover:text-white font-medium transition-all"
+                onClick={() => {
+                  // TODO: Open tips modal or navigate to tips page
+                  console.log('Show VO tips');
+                }}
+              >
+                <Lightbulb className="h-4 w-4 mr-2" />
+                Check out our top tips for creating your initial VO!
+              </Button>
+            </div>
 
             <div className="mt-6">
               <VideoRecorder
