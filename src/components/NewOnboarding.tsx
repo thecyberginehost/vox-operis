@@ -105,7 +105,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const [initialVoRecording, setInitialVoRecording] = useState<VideoRecording | null>(null);
   const [showTypeformAlternative, setShowTypeformAlternative] = useState(false);
 
-  const totalSteps = 3; // CV Upload + What makes you recognisable + Create initial VO
+  const totalSteps = 2; // CV Upload + Create initial VO
 
   // Auto-save progress to localStorage
   useEffect(() => {
@@ -198,17 +198,15 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
     switch (currentStep) {
       case 1: return true; // Step 1 CV upload is optional, can always proceed
       case 2:
-        return data.soft_skills.length > 0 && data.career_goals.length > 0;
-      case 3:
-        return initialVoRecording !== null; // Step 3 requires initial VO recording
+        return initialVoRecording !== null; // Step 2 requires initial VO recording
       default:
         return true;
     }
   };
 
   const canSkip = () => {
-    // Step 2 is optional and can be skipped
-    return currentStep === 2;
+    // No steps are skippable
+    return false;
   };
 
   const handleSkip = () => {
@@ -523,64 +521,6 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         );
 
       case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">What makes you recognisable</h2>
-              <p className="text-muted-foreground">Soft skills and career aspirations that AI can't replicate</p>
-            </div>
-
-            <div className="space-y-6">
-              <div>
-                <Label className="flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-red-500" />
-                  Soft Skills * (Select your strongest)
-                </Label>
-                <p className="text-sm text-muted-foreground mb-3">These human qualities set you apart</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {softSkillsOptions.map((skill) => (
-                    <Badge
-                      key={skill}
-                      variant={data.soft_skills.includes(skill) ? "default" : "outline"}
-                      className="cursor-pointer transition-all p-3 text-center justify-center hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => handleArrayToggle('soft_skills', skill)}
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-                {data.soft_skills.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">Please select at least one soft skill</p>
-                )}
-              </div>
-
-              <div>
-                <Label className="flex items-center gap-2">
-                  <Target className="h-4 w-4 text-blue-500" />
-                  Career Goals * (What are you seeking?)
-                </Label>
-                <p className="text-sm text-muted-foreground mb-3">Help employers understand what motivates you</p>
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
-                  {careerGoalsOptions.map((goal) => (
-                    <Badge
-                      key={goal}
-                      variant={data.career_goals.includes(goal) ? "default" : "outline"}
-                      className="cursor-pointer transition-all p-3 text-center justify-center hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => handleArrayToggle('career_goals', goal)}
-                    >
-                      {goal}
-                    </Badge>
-                  ))}
-                </div>
-                {data.career_goals.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">Please select at least one career goal</p>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3:
         return (
           <div className="space-y-6">
             <div className="text-center space-y-4">
