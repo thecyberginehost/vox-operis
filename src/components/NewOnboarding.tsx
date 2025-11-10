@@ -103,6 +103,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const [uploadingCv, setUploadingCv] = useState(false);
 
   const [initialVoRecording, setInitialVoRecording] = useState<VideoRecording | null>(null);
+  const [showTypeformAlternative, setShowTypeformAlternative] = useState(false);
 
   const totalSteps = 3; // CV Upload + What makes you recognisable + Create initial VO
 
@@ -435,52 +436,99 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
               </h2>
             </div>
 
-            <div className="max-w-xl mx-auto">
-              <div className="border-2 border-dashed border-[#2a3142] rounded-lg p-8">
-                <div className="text-center space-y-4">
-                  <h3 className="text-xl text-white font-medium">
-                    Hi, can we have your CV?
-                  </h3>
-                  <p className="text-sm text-gray-400 leading-relaxed max-w-md mx-auto">
-                    We will use it to help build your VO script so you have a baseline to work from when recording. We'll make this so simple for you :)
-                  </p>
+            {!showTypeformAlternative ? (
+              <div className="max-w-xl mx-auto">
+                <div className="border-2 border-dashed border-[#2a3142] rounded-lg p-8">
+                  <div className="text-center space-y-4">
+                    <h3 className="text-xl text-white font-medium">
+                      Hi, can we have your CV?
+                    </h3>
+                    <p className="text-sm text-gray-400 leading-relaxed max-w-md mx-auto">
+                      We will use it to help build your VO script so you have a baseline to work from when recording. We'll make this so simple for you :)
+                    </p>
 
-                  <div className="pt-4">
-                    <div className="space-y-3">
-                      <p className="text-sm text-gray-400">Upload your CV</p>
-                      <p className="text-xs text-gray-500">You can add it now, or do it later if you prefer</p>
+                    <div className="pt-4">
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-400">Upload your CV</p>
+                        <p className="text-xs text-gray-500">You can add it now, or do it later if you prefer</p>
 
-                      <div className="flex flex-col items-center gap-3 pt-2">
-                        <input
-                          id="cv-upload-step1"
-                          type="file"
-                          accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                          onChange={handleCvChange}
-                          className="hidden"
-                        />
-                        <label
-                          htmlFor="cv-upload-step1"
-                          className="flex items-center gap-2 px-6 py-2 border border-[#2a3142] rounded-md cursor-pointer hover:bg-[#1a1f2e] transition-colors text-gray-300 hover:text-white"
-                        >
-                          <Upload className="h-4 w-4" />
-                          <span className="text-sm">Choose</span>
-                        </label>
+                        <div className="flex flex-col items-center gap-3 pt-2">
+                          <input
+                            id="cv-upload-step1"
+                            type="file"
+                            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            onChange={handleCvChange}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="cv-upload-step1"
+                            className="flex items-center gap-2 px-6 py-2 border border-[#2a3142] rounded-md cursor-pointer hover:bg-[#1a1f2e] transition-colors text-gray-300 hover:text-white"
+                          >
+                            <Upload className="h-4 w-4" />
+                            <span className="text-sm">Choose</span>
+                          </label>
 
-                        {cvFile && (
-                          <div className="flex items-center gap-2 text-sm text-gray-300">
-                            <FileText className="h-4 w-4 text-[#f59e0b]" />
-                            <span>{cvFile.name}</span>
-                            <span className="text-xs text-gray-500">
-                              ({(cvFile.size / 1024 / 1024).toFixed(2)} MB)
-                            </span>
-                          </div>
-                        )}
+                          {cvFile && (
+                            <div className="flex items-center gap-2 text-sm text-gray-300">
+                              <FileText className="h-4 w-4 text-[#f59e0b]" />
+                              <span>{cvFile.name}</span>
+                              <span className="text-xs text-gray-500">
+                                ({(cvFile.size / 1024 / 1024).toFixed(2)} MB)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="pt-6 border-t border-[#2a3142]">
+                          <Button
+                            variant="ghost"
+                            onClick={() => setShowTypeformAlternative(true)}
+                            className="text-gray-400 hover:text-white hover:bg-[#1a1f2e]"
+                          >
+                            Don't have a CV? Click here
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="max-w-3xl mx-auto">
+                <div className="bg-[#1a1f2e] border border-[#2a3142] rounded-lg p-8">
+                  <div className="text-center space-y-6">
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="h-16 w-16 rounded-full bg-[#f59e0b]/10 flex items-center justify-center">
+                        <FileText className="h-8 w-8 text-[#f59e0b]" />
+                      </div>
+                    </div>
+                    <h3 className="text-2xl text-white font-bold">
+                      Let's build your profile together
+                    </h3>
+                    <p className="text-gray-400 max-w-md mx-auto">
+                      No worries! We'll help you create a professional profile with a quick questionnaire.
+                    </p>
+
+                    <div className="bg-[#0a0e1a] border border-[#2a3142] rounded-lg p-12 my-6">
+                      <p className="text-gray-500 text-sm italic">
+                        [Typeform Embed Placeholder]
+                        <br />
+                        <span className="text-xs">The Typeform questionnaire will be embedded here</span>
+                      </p>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowTypeformAlternative(false)}
+                      className="border-[#2a3142] text-gray-300 hover:bg-[#1a1f2e] hover:text-white"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back to CV upload
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -661,6 +709,16 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                     className="px-6 text-gray-400 hover:text-white hover:bg-[#1a1f2e]"
                   >
                     Skip for now
+                  </Button>
+                )}
+
+                {currentStep === 1 && !showTypeformAlternative && (
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTypeformAlternative(true)}
+                    className="px-6 border-[#2a3142] text-gray-300 hover:bg-[#1a1f2e] hover:text-white"
+                  >
+                    Continue without a CV
                   </Button>
                 )}
 
