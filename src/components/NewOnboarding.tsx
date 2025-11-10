@@ -478,16 +478,6 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                             </div>
                           )}
                         </div>
-
-                        <div className="pt-6 border-t border-[#2a3142]">
-                          <Button
-                            variant="ghost"
-                            onClick={() => setShowTypeformAlternative(true)}
-                            className="text-gray-400 hover:text-white hover:bg-[#1a1f2e]"
-                          >
-                            Don't have a CV? Click here
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -714,9 +704,8 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
 
                 {currentStep === 1 && !showTypeformAlternative && (
                   <Button
-                    variant="outline"
                     onClick={() => setShowTypeformAlternative(true)}
-                    className="px-6 border-[#2a3142] text-gray-300 hover:bg-[#1a1f2e] hover:text-white"
+                    className="px-6 bg-gradient-to-r from-[#f59e0b] to-[#d97706] hover:from-[#ea9005] hover:to-[#c56f06] text-white font-medium"
                   >
                     Continue without a CV
                   </Button>
