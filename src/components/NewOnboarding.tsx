@@ -534,16 +534,37 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
 
                   <div>
                     <Label htmlFor="phone">Phone Number</Label>
-                    <PhoneInput
-                      id="phone"
-                      value={data.phone}
-                      onChange={(value) => handleInputChange('phone', value || '')}
-                      defaultCountry="GB"
-                      international
-                      countryCallingCodeEditable={false}
-                      placeholder="Enter phone number"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 mt-1"
-                    />
+                    <div className="mt-1">
+                      <PhoneInput
+                        id="phone"
+                        value={data.phone}
+                        onChange={(value) => handleInputChange('phone', value || '')}
+                        defaultCountry="GB"
+                        international
+                        countryCallingCodeEditable={false}
+                        placeholder="Enter phone number"
+                        className="phone-input-dark"
+                        style={{
+                          '--PhoneInput-color': '#e5e7eb',
+                          '--PhoneInputInternationalIconPhone-opacity': '0.8',
+                          '--PhoneInputInternationalIconGlobe-opacity': '0.65',
+                          '--PhoneInputCountrySelect-marginRight': '0.35em',
+                          '--PhoneInputCountrySelectArrow-width': '0.3em',
+                          '--PhoneInputCountrySelectArrow-marginLeft': 'var(--PhoneInputCountrySelect-marginRight)',
+                          '--PhoneInputCountrySelectArrow-borderWidth': '1px',
+                          '--PhoneInputCountrySelectArrow-opacity': '0.45',
+                          '--PhoneInputCountrySelectArrow-color': 'currentColor',
+                          '--PhoneInputCountrySelectArrow-color--focus': 'currentColor',
+                          '--PhoneInputCountrySelectArrow-transform': 'rotate(45deg)',
+                          '--PhoneInputCountryFlag-aspectRatio': '1.5',
+                          '--PhoneInputCountryFlag-height': '1em',
+                          '--PhoneInputCountryFlag-borderWidth': '1px',
+                          '--PhoneInputCountryFlag-borderColor': 'rgba(0,0,0,0.5)',
+                          '--PhoneInputCountryFlag-borderColor--focus': 'currentColor',
+                          '--PhoneInputCountryFlag-backgroundColor--loading': 'rgba(0,0,0,0.1)'
+                        } as React.CSSProperties}
+                      />
+                    </div>
                   </div>
                 </div>
 
