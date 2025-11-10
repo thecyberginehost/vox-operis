@@ -610,7 +610,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-bold mb-2">What makes you recognizable</h2>
+              <h2 className="text-2xl font-bold mb-2">What makes you recognisable</h2>
               <p className="text-muted-foreground">Soft skills and career aspirations that AI can't replicate</p>
             </div>
 
