@@ -544,7 +544,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
               </div>
 
               {/* Next Step Info */}
-              <Alert className="bg-[#1a1f2e] border-[#2a3142]">
+              <Alert className="bg-[#0f1419] border-[#2a3142]">
                 <Video className="h-4 w-4 text-blue-400" />
                 <AlertDescription className="text-sm text-gray-400">
                   <strong className="text-white">Next:</strong> You'll create your VO (Video + Voice) profile that replaces traditional CVs. This dynamic profile will showcase your personality, communication skills, and professional story.
