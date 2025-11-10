@@ -704,8 +704,9 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
 
                 {currentStep === 1 && !showTypeformAlternative && (
                   <Button
+                    variant="outline"
                     onClick={() => setShowTypeformAlternative(true)}
-                    className="px-6 bg-gradient-to-r from-[#f59e0b] to-[#d97706] hover:from-[#ea9005] hover:to-[#c56f06] text-white font-medium"
+                    className="px-6 border-2 border-white text-white hover:bg-white hover:text-[#0a0e1a] font-medium transition-all"
                   >
                     Continue without a CV
                   </Button>
