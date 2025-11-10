@@ -194,11 +194,6 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
       case 1: return true; // Step 1 CV upload is optional, can always proceed
       case 2: return true; // Step 2 VO style selection is optional, can always proceed
       case 3:
-        if (data.userType === 'candidate' || data.userType === 'both') {
-          return data.industry && data.skills.length > 0;
-        }
-        return data.recruiting_focus.length > 0;
-      case 4:
         return data.soft_skills.length > 0 && data.career_goals.length > 0;
       default:
         return true;
@@ -206,8 +201,8 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   };
 
   const canSkip = () => {
-    // Steps 2, 4 and 5 are optional and can be skipped
-    return currentStep === 2 || currentStep === 4 || currentStep === 5;
+    // Steps 2, 3 and 4 are optional and can be skipped
+    return currentStep === 2 || currentStep === 3 || currentStep === 4;
   };
 
   const handleSkip = () => {
@@ -612,104 +607,6 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         return null;
 
       case 3:
-        if (data.userType === 'candidate' || data.userType === 'both') {
-          return (
-            <div className="space-y-6">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">Your Professional Expertise</h2>
-                <p className="text-muted-foreground">Help employers understand your skills and industry focus</p>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <Label>Industry *</Label>
-                  <Select value={data.industry} onValueChange={(value) => handleInputChange('industry', value)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select your primary industry" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {industries.map((industry) => (
-                        <SelectItem key={industry} value={industry}>
-                          {industry}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Key Skills * (Select all that apply)</Label>
-                  <p className="text-sm text-muted-foreground mb-3">Choose your strongest professional skills</p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {skillsOptions.map((skill) => (
-                      <Badge
-                        key={skill}
-                        variant={data.skills.includes(skill) ? "default" : "outline"}
-                        className="cursor-pointer transition-all p-3 text-center justify-center hover:bg-primary hover:text-primary-foreground"
-                        onClick={() => handleArrayToggle('skills', skill)}
-                      >
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                  {data.skills.length === 0 && (
-                    <p className="text-sm text-red-500 mt-2">Please select at least one skill</p>
-                  )}
-                </div>
-
-                <div>
-                  <Label>Education Level</Label>
-                  <Select value={data.education_level} onValueChange={(value) => handleInputChange('education_level', value)}>
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Highest education level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {educationLevels.map((level) => (
-                        <SelectItem key={level} value={level}>
-                          {level}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </div>
-          );
-        }
-
-        if (data.userType === 'recruiter') {
-          return (
-            <div className="space-y-6">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold mb-2">Your Recruiting Focus</h2>
-                <p className="text-muted-foreground">What types of talent do you typically look for?</p>
-              </div>
-
-              <div>
-                <Label>Areas of Focus * (Select all that apply)</Label>
-                <p className="text-sm text-muted-foreground mb-3">What kinds of roles do you typically hire for?</p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                  {recruitingFocusOptions.map((focus) => (
-                    <Badge
-                      key={focus}
-                      variant={data.recruiting_focus.includes(focus) ? "default" : "outline"}
-                      className="cursor-pointer transition-all p-3 text-center justify-center hover:bg-primary hover:text-primary-foreground"
-                      onClick={() => handleArrayToggle('recruiting_focus', focus)}
-                    >
-                      {focus}
-                    </Badge>
-                  ))}
-                </div>
-                {data.recruiting_focus.length === 0 && (
-                  <p className="text-sm text-red-500 mt-2">Please select at least one area</p>
-                )}
-              </div>
-            </div>
-          );
-        }
-        return null;
-
-      case 4:
         return (
           <div className="space-y-6">
             <div className="text-center">
@@ -767,7 +664,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
           </div>
         );
 
-      case 5:
+      case 4:
         return (
           <div className="space-y-6">
             <div className="text-center">
