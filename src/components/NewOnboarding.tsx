@@ -20,6 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { supabase } from "@/lib/supabase";
+import { VideoRecorder } from "@/components/VideoRecorder";
+import { VideoRecording } from "@/hooks/useVideoRecorder";
 
 interface NewOnboardingProps {
   onComplete: () => void;
@@ -100,7 +102,9 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [uploadingCv, setUploadingCv] = useState(false);
 
-  const totalSteps = 2; // CV Upload + What makes you recognisable
+  const [initialVoRecording, setInitialVoRecording] = useState<VideoRecording | null>(null);
+
+  const totalSteps = 3; // CV Upload + What makes you recognisable + Create initial VO
 
   // Auto-save progress to localStorage
   useEffect(() => {
@@ -194,6 +198,8 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
       case 1: return true; // Step 1 CV upload is optional, can always proceed
       case 2:
         return data.soft_skills.length > 0 && data.career_goals.length > 0;
+      case 3:
+        return initialVoRecording !== null; // Step 3 requires initial VO recording
       default:
         return true;
     }
@@ -311,6 +317,33 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
     }
   };
 
+  const uploadInitialVo = async (userId: string): Promise<string | null> => {
+    if (!initialVoRecording) return null;
+
+    try {
+      const fileName = `${userId}-initial-vo-${Date.now()}.webm`;
+      const filePath = `initial-vos/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-documents')
+        .upload(filePath, initialVoRecording.blob, {
+          contentType: 'video/webm',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('profile-documents')
+        .getPublicUrl(filePath);
+
+      return publicUrl;
+    } catch (err) {
+      console.error('Error uploading initial VO:', err);
+      return null;
+    }
+  };
+
   const handleNext = () => {
     if (canProceed() && currentStep < totalSteps) {
       setCurrentStep(prev => prev + 1);
@@ -332,6 +365,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       let avatarUrl = null;
       let cvUrl = null;
+      let initialVoUrl = null;
 
       // Upload avatar if one was selected
       if (avatarFile && user) {
@@ -343,6 +377,11 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         cvUrl = await uploadCv(user.id);
       }
 
+      // Upload initial VO if one was recorded
+      if (initialVoRecording && user) {
+        initialVoUrl = await uploadInitialVo(user.id);
+      }
+
       const profileUpdates: any = {
         onboarding_completed: true,
         user_type: data.userType,
@@ -352,6 +391,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
         phone: data.phone || null,
         avatar_url: avatarUrl,
         cv_url: cvUrl || data.cv_url || null,
+        initial_vo_url: initialVoUrl || null,
         "years_of_experience": data.experience_years,
         "professional_summary": data.professional_summary.trim() || null,
         industry: data.industry,
@@ -499,6 +539,56 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                 )}
               </div>
             </div>
+          </div>
+        );
+
+      case 3:
+        return (
+          <div className="space-y-6">
+            <div className="text-center space-y-4">
+              <div className="flex items-center justify-center mb-4">
+                <div className="h-12 w-12 rounded-full bg-[#f59e0b]/10 flex items-center justify-center">
+                  <Video className="h-6 w-6 text-[#f59e0b]" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold text-white">Create Your Initial VO</h2>
+              <p className="text-gray-400 max-w-2xl mx-auto">
+                This is your culture check video - a 1-2 minute introduction that showcases your personality
+                and helps employers see if you're the right fit for their team. Be yourself and let your
+                authentic character shine through!
+              </p>
+            </div>
+
+            <Alert className="bg-[#1a1f2e] border-[#2a3142]">
+              <AlertCircle className="h-4 w-4 text-[#f59e0b]" />
+              <AlertDescription className="text-gray-300">
+                <strong className="text-white">What to include:</strong> Briefly introduce yourself, mention what
+                makes you unique (your recognisable traits), and why you're passionate about your work.
+                Keep it natural and conversational - aim for 60-120 seconds.
+              </AlertDescription>
+            </Alert>
+
+            <div className="mt-6">
+              <VideoRecorder
+                maxDuration={120}
+                onRecordingComplete={(recording) => {
+                  setInitialVoRecording(recording);
+                }}
+                onRecordingClear={() => {
+                  setInitialVoRecording(null);
+                }}
+                className="w-full"
+                uploadEnabled={false}
+                downloadEnabled={false}
+                backgroundEnabled={true}
+              />
+            </div>
+
+            {!initialVoRecording && (
+              <p className="text-sm text-gray-400 text-center mt-4">
+                Record your initial VO to continue
+              </p>
+            )}
           </div>
         );
 
