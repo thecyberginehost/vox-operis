@@ -401,26 +401,38 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-3xl font-bold mb-2">Welcome to the Future of Work</h2>
-              <p className="text-lg text-muted-foreground mb-2">A CV tells. A VO shows.</p>
-              <p className="text-muted-foreground">What brings you to Vox-Operis?</p>
+          <div className="space-y-8">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                Welcome to the Future of Work
+              </h2>
+              <p className="text-xl md:text-2xl text-gray-400 mb-3">
+                A CV tells. A VO shows.
+              </p>
+              <p className="text-lg text-gray-400">
+                What brings you to Vox-Operis?
+              </p>
             </div>
 
-            <div className="grid gap-4">
+            <div className="max-w-2xl mx-auto space-y-4">
               <Card
-                className={`cursor-pointer transition-all ${data.userType === 'candidate' ? 'ring-2 ring-primary bg-primary/5' : 'hover:shadow-lg hover:scale-[1.01]'}`}
+                className={`cursor-pointer transition-all bg-[#1a1f2e] border-[#2a3142] ${
+                  data.userType === 'candidate'
+                    ? 'ring-2 ring-[#d97706] bg-[#1f2535]'
+                    : 'hover:bg-[#1f2535] hover:border-[#3a4152]'
+                }`}
                 onClick={() => handleInputChange('userType', 'candidate')}
               >
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-lg bg-blue-100 text-blue-600">
-                      <User className="h-6 w-6" />
+                    <div className="p-4 rounded-xl bg-blue-500/10 text-blue-400 flex-shrink-0">
+                      <User className="h-7 w-7" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-lg mb-2">I'm Looking for Work</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-xl text-white mb-2">
+                        I'm Looking for Work
+                      </h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">
                         Create a dynamic profile that showcases your personality, skills, and achievements.
                         Show employers who you are, not just where you've worked.
                       </p>
@@ -429,10 +441,10 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                 </CardContent>
               </Card>
 
-              <Alert className="mt-4">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  <strong>Note:</strong> We're currently focused on helping job seekers create amazing VO profiles.
+              <Alert className="bg-[#1a1f2e] border-[#2a3142] text-gray-300">
+                <AlertCircle className="h-5 w-5 text-blue-400" />
+                <AlertDescription className="text-sm">
+                  <strong className="text-white">Note:</strong> We're currently focused on helping job seekers create amazing VO profiles.
                   Recruiter features are coming soon!
                 </AlertDescription>
               </Alert>
@@ -896,30 +908,35 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/5 to-primary/5 p-6">
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-[#0a0e1a] p-6">
+      <div className="max-w-5xl mx-auto">
         {/* Progress */}
         <div className="mb-8">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span>Step {currentStep} of {totalSteps}</span>
+          <div className="flex justify-between text-sm text-gray-400 mb-3">
+            <span className="text-white font-medium">Step {currentStep} of {totalSteps}</span>
             <div className="flex items-center gap-4">
               {lastSaved && (
-                <span className="flex items-center gap-1 text-xs text-green-600">
+                <span className="flex items-center gap-1 text-xs text-green-500">
                   <Save className="h-3 w-3" />
                   Saved {new Date().getTime() - lastSaved.getTime() < 5000 ? 'just now' : 'recently'}
                 </span>
               )}
-              <span>{Math.round((currentStep / totalSteps) * 100)}% complete</span>
+              <span className="text-white font-medium">{Math.round((currentStep / totalSteps) * 100)}% complete</span>
             </div>
           </div>
-          <Progress value={(currentStep / totalSteps) * 100} className="h-3" />
+          <div className="h-2 bg-[#1a1f2e] rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-[#f59e0b] to-[#d97706] transition-all duration-300"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
+          </div>
         </div>
 
         {/* Content Card */}
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-8">
+        <Card className="border-0 shadow-2xl bg-[#0f1419] border-[#1a1f2e]">
+          <CardContent className="p-8 md:p-12">
             {error && (
-              <Alert variant="destructive" className="mb-6">
+              <Alert variant="destructive" className="mb-6 bg-red-950/50 border-red-900 text-red-200">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -927,23 +944,23 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
             {renderStep()}
 
             {/* Navigation */}
-            <div className="flex justify-between mt-8">
+            <div className="flex justify-between mt-12">
               <Button
                 variant="outline"
                 onClick={handleBack}
                 disabled={currentStep === 1}
-                className="px-6"
+                className="px-8 bg-transparent border-[#2a3142] text-gray-300 hover:bg-[#1a1f2e] hover:text-white disabled:opacity-50"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back
               </Button>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 {canSkip() && currentStep < totalSteps && (
                   <Button
                     variant="ghost"
                     onClick={handleSkip}
-                    className="px-6"
+                    className="px-6 text-gray-400 hover:text-white hover:bg-[#1a1f2e]"
                   >
                     Skip for now
                   </Button>
@@ -953,7 +970,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                   <Button
                     onClick={handleNext}
                     disabled={!canProceed() && !canSkip()}
-                    className="px-6"
+                    className="px-8 bg-gradient-to-r from-[#f59e0b] to-[#d97706] hover:from-[#ea9005] hover:to-[#c56f06] text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Continue
                     <ArrowRight className="h-4 w-4 ml-2" />
@@ -962,7 +979,7 @@ const NewOnboarding = ({ onComplete }: NewOnboardingProps) => {
                   <Button
                     onClick={handleComplete}
                     disabled={loading}
-                    className="px-6 bg-green-600 hover:bg-green-700"
+                    className="px-8 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-medium"
                   >
                     {loading ? 'Setting up...' : 'Complete Profile'}
                     <CheckCircle className="h-4 w-4 ml-2" />
